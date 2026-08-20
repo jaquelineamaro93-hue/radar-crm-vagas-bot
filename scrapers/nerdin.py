@@ -132,50 +132,20 @@ def scrape() -> list[dict]:
         "Accept-Language": "pt-BR,pt;q=0.9",
     })
 
-    for url in CRM_SEARCHES:
-        try:
-            resp = session.get(url, timeout=(5, 12))
-            if resp.status_code == 200:
-                vagas.extend(_parse_page(resp.text, seen))
-        except Exception as e:
-            print(f"[Nerdin] Erro '{url}': {e}")
-
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/124.0.0.0 Safari/537.36"
-        ),
-        "Accept-Language": "pt-BR,pt;q=0.9",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    })
-
-    # Página dedicada de home office (vagas remotas)
-    for page in range(1, MAX_PAGES + 1):
-        try:
-            params = {"pagina": page} if page > 1 else {}
-            resp = session.get(REMOTE_URL, params=params, timeout=(5, 12))
-            if resp.status_code != 200:
+    for term in CRM_SEARCHES:
+        for page in range(1, 4):
+            try:
+                url = f"{BASE_URL}/vagas.php?q={term.replace(' ', '+')}&pagina={page}"
+                resp = session.get(url, timeout=(5, 12))
+                if resp.status_code != 200:
+                    break
+                page_vagas = _parse_page(resp.text, seen)
+                if not page_vagas:
+                    break
+                vagas.extend(page_vagas)
+            except Exception as e:
+                print(f"[Nerdin] Erro '{term}' p{page}: {e}")
                 break
-            page_vagas = _parse_page(resp.text, seen)
-            vagas.extend(page_vagas)
-            if not page_vagas and page > 1:
-                break
-        except Exception as e:
-            print(f"[Nerdin] home-office página {page}: {e}")
-            break
-
-    # Página geral — filtra por localização remota
-    # (captura vagas remotas que possam não estar na página de HO)
-    try:
-        resp = session.get(GENERAL_URL, timeout=(5, 12))
-        if resp.status_code == 200:
-            all_vagas = _parse_page(resp.text, seen)
-            remote_vagas = [v for v in all_vagas if _is_remote(v.get("location", ""))]
-            vagas.extend(remote_vagas)
-    except Exception as e:
-        print(f"[Nerdin] geral: {e}")
 
     print(f"[Nerdin] {len(vagas)} vagas encontradas")
     return vagas
