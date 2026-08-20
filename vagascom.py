@@ -15,60 +15,30 @@ BASE_URL = "https://www.vagas.com.br"
 # remote_only=True → só aceita vagas com "Home Office" na localização
 # forced_category → ignora classify(), usa esta categoria diretamente
 SEARCHES = [
-    # ── Designer (remoto) ────────────────────────────────────────────────────
-    ("vagas-de-designer",           True,  None),
-    ("vagas-de-ux-designer",        True,  None),
-    ("vagas-de-product-designer",   True,  None),
-    ("vagas-de-web-designer",       True,  None),
-    # ── CX / CS (remoto) ────────────────────────────────────────────────────
-    ("vagas-de-customer-success",   True,  None),
-    ("vagas-de-atendimento-ao-cliente", True, None),
-    ("vagas-de-analista-de-suporte", True, None),
-    ("vagas-de-customer-experience", True, None),
-    # ── Automação Industrial (presencial) ────────────────────────────────────
-    ("vagas-de-engenheiro-de-automacao-industrial", False, "automacao_presencial"),
-    ("vagas-de-automacao-industrial",               False, "automacao_presencial"),
-    ("vagas-de-engenheiro-de-controle",             False, "automacao_presencial"),
-    ("vagas-de-instrumentacao-industrial",          False, "automacao_presencial"),
-    # ── Projetista de Automação (remoto) ─────────────────────────────────────
-    ("vagas-de-projetista-eletrico",     True, "automacao_remote"),
-    ("vagas-de-projetista-de-automacao", True, "automacao_remote"),
-    ("vagas-de-projetista-de-paineis",   True, "automacao_remote"),
-    # ── Dev / Tech Leadership (remoto) ───────────────────────────────────────
-    ("vagas-de-tech-lead",                  True, None),
-    ("vagas-de-engineering-manager",        True, None),
-    ("vagas-de-gerente-de-tecnologia",      True, None),
-    ("vagas-de-gerente-de-ti",              True, None),
-    ("vagas-de-cto",                        True, None),
-    ("vagas-de-desenvolvedor",           True, None),
-    ("vagas-de-programador",             True, None),
-    ("vagas-de-desenvolvedor-frontend",  True, None),
-    ("vagas-de-desenvolvedor-backend",   True, None),
-    ("vagas-de-desenvolvedor-fullstack", True, None),
-    ("vagas-de-engenheiro-de-software",  True, None),
-    # ── Dados (remoto) ───────────────────────────────────────────────────────
-    ("vagas-de-analista-de-dados",       True, None),
-    ("vagas-de-cientista-de-dados",      True, None),
-    ("vagas-de-engenheiro-de-dados",     True, None),
-    ("vagas-de-analista-de-business-intelligence", True, None),
-    ("vagas-de-machine-learning",        True, None),
-    # ── PO / PM (remoto) ─────────────────────────────────────────────────────
-    ("vagas-de-product-owner",              True, None),
-    ("vagas-de-product-manager",            True, None),
-    ("vagas-de-gerente-de-produto",         True, None),
-    # ── QA (remoto) ───────────────────────────────────────────────────────────
-    ("vagas-de-analista-de-qualidade",      True, None),
-    ("vagas-de-analista-de-testes",         True, None),
-    ("vagas-de-quality-assurance",          True, None),
-    ("vagas-de-qa-analyst",                 True, None),
-    # ── CRM (remoto) ─────────────────────────────────────────────────────────
-    ("vagas-de-analista-de-crm",   True, None),
-    ("vagas-de-analista-de-salesforce", True, None),
-    # ── Ed. Física (remoto + presencial SP via filtro em main.py) ─────────────
-    ("vagas-de-professor-de-educacao-fisica", False, None),
-    ("vagas-de-personal-trainer",            False, None),
-    ("vagas-de-preparador-fisico",           False, None),
-    ("vagas-de-instrutor-de-academia",       False, None),
+    ("vagas-de-crm",                              True, None),
+    ("vagas-de-analista-de-crm",                  True, None),
+    ("vagas-de-especialista-em-crm",              True, None),
+    ("vagas-de-coordenador-de-crm",               True, None),
+    ("vagas-de-gerente-de-crm",                   True, None),
+    ("vagas-de-diretor-de-crm",                   True, None),
+    ("vagas-de-consultor-de-crm",                 True, None),
+    ("vagas-de-salesforce",                       True, None),
+    ("vagas-de-analista-de-salesforce",           True, None),
+    ("vagas-de-salesforce-developer",             True, None),
+    ("vagas-de-salesforce-administrator",         True, None),
+    ("vagas-de-marketing-cloud",                  True, None),
+    ("vagas-de-hubspot",                          True, None),
+    ("vagas-de-analista-de-hubspot",              True, None),
+    ("vagas-de-rd-station",                       True, None),
+    ("vagas-de-crm-marketing",                    True, None),
+    ("vagas-de-marketing-de-relacionamento",      True, None),
+    ("vagas-de-marketing-automation",             True, None),
+    ("vagas-de-analista-de-campanhas",            True, None),
+    ("vagas-de-lifecycle-marketing",              True, None),
+    ("vagas-de-dynamics-crm",                     True, None),
+    ("vagas-de-pipedrive",                        True, None),
+    ("vagas-de-braze",                            True, None),
+    ("vagas-de-klaviyo",                          True, None),
 ]
 
 

@@ -23,44 +23,27 @@ SEARCH_URL = f"{BASE_URL}/jobs"
 # (query, fromage_days)
 # O termo "remoto" faz parte do keyword para pré-filtrar no Indeed
 SEARCHES = [
-    # ── Designer ──────────────────────────────────────────────────────────────
-    ("designer remoto",                  30),
-    ("ux designer remoto",               30),
-    ("product designer remoto",          30),
-    # ── CX / CS ───────────────────────────────────────────────────────────────
-    ("customer success remoto",          30),
-    ("customer experience remoto",       30),
-    ("analista de atendimento remoto",   30),
-    # ── Dev ───────────────────────────────────────────────────────────────────
-    ("desenvolvedor remoto",             30),
-    ("developer remote",                 30),
-    ("frontend developer remoto",        30),
-    ("backend developer remoto",         30),
-    ("fullstack developer remoto",       30),
-    ("software engineer remoto",         30),
-    ("tech lead remoto",                 30),
-    ("engineering manager remoto",       30),
-    # ── Dados ─────────────────────────────────────────────────────────────────
-    ("analista de dados remoto",         60),
-    ("data analyst remoto",              60),
-    ("engenheiro de dados remoto",       60),
-    ("data engineer remoto",             60),
-    ("data scientist remoto",            60),
-    ("business intelligence remoto",     60),
-    # ── CRM ───────────────────────────────────────────────────────────────────
-    ("analista de crm remoto",           60),
-    ("salesforce remoto",                60),
-    # ── PO / PM ───────────────────────────────────────────────────────────────
-    ("product owner remoto",             60),
-    ("product manager remoto",           60),
-    ("gerente de produto remoto",        60),
-    # ── QA ────────────────────────────────────────────────────────────────────
-    ("analista de qualidade remoto",     60),
-    ("qa engineer remoto",               60),
-    ("analista de testes remoto",        60),
-    # ── Ed. Física ────────────────────────────────────────────────────────────
-    ("personal trainer remoto",          30),
-    ("professor educacao fisica remoto", 30),
+    ("crm",                          30),
+    ("analista de crm",              30),
+    ("especialista crm",             30),
+    ("gerente crm",                  30),
+    ("diretor crm",                  30),
+    ("salesforce",                   30),
+    ("salesforce developer",         30),
+    ("salesforce administrator",     30),
+    ("marketing cloud",              30),
+    ("hubspot",                      30),
+    ("rd station",                   30),
+    ("crm marketing",                30),
+    ("marketing de relacionamento",  30),
+    ("marketing automation",         30),
+    ("analista de campanhas",        30),
+    ("dynamics crm",                 30),
+    ("pipedrive",                    30),
+    ("braze",                        30),
+    ("klaviyo",                      30),
+    ("lifecycle marketing",          30),
+    ("jornada do cliente",           30),
 ]
 
 _REMOTE_WORDS = {"remoto", "remote", "home office", "trabalho remoto"}
