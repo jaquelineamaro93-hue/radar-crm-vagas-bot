@@ -10,6 +10,7 @@ from .programathor import scrape as scrape_programathor
 from .empregoscom import scrape as scrape_empregoscom
 from .indeed import scrape as scrape_indeed
 from .dribbble import scrape as scrape_dribbble
+from .solides import scrape as scrape_solides
 
 ALL_SCRAPERS = [
     scrape_linkedin,
@@ -24,4 +25,5 @@ ALL_SCRAPERS = [
     scrape_empregoscom,
     scrape_indeed,
     scrape_dribbble,
+    scrape_solides,
 ]
