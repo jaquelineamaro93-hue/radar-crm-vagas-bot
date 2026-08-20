@@ -15,51 +15,38 @@ BASE_URL = "https://www.infojobs.com.br"
 
 # (slug, remote_only, forced_category_or_None)
 SEARCHES = [
-    # ── Designer (remoto) ────────────────────────────────────────────────────
-    ("vagas-de-emprego-designer-trabalho-home-office",          True,  None),
-    ("vagas-de-emprego-ux-designer-trabalho-home-office",       True,  None),
-    ("vagas-de-emprego-product-designer-trabalho-home-office",  True,  None),
-    # ── CX / CS (remoto) ────────────────────────────────────────────────────
-    ("vagas-de-emprego-customer-success-trabalho-home-office",  True,  None),
-    ("vagas-de-emprego-customer-experience-trabalho-home-office", True, None),
-    ("vagas-de-emprego-atendimento-ao-cliente-trabalho-home-office", True, None),
-    # ── Automação Industrial (presencial) ────────────────────────────────────
-    ("vagas-de-emprego-engenheiro-de-automacao-industrial",     False, "automacao_presencial"),
-    ("vagas-de-emprego-automacao-industrial",                   False, "automacao_presencial"),
-    ("vagas-de-emprego-programador-clp",                        False, "automacao_presencial"),
-    # ── Projetista de Automação (remoto) ─────────────────────────────────────
-    ("vagas-de-emprego-projetista-eletrico-trabalho-home-office",    True, "automacao_remote"),
-    ("vagas-de-emprego-projetista-de-automacao-trabalho-home-office", True, "automacao_remote"),
-    # ── Dev / Tech Leadership (remoto) ───────────────────────────────────────
-    ("vagas-de-emprego-tech-lead-trabalho-home-office",                  True, None),
-    ("vagas-de-emprego-gerente-de-tecnologia-trabalho-home-office",      True, None),
-    ("vagas-de-emprego-gerente-de-ti-trabalho-home-office",              True, None),
-    ("vagas-de-emprego-engineering-manager-trabalho-home-office",        True, None),
-    ("vagas-de-emprego-desenvolvedor-trabalho-home-office",          True, None),
-    ("vagas-de-emprego-programador-trabalho-home-office",            True, None),
-    ("vagas-de-emprego-desenvolvedor-web-trabalho-home-office",      True, None),
-    ("vagas-de-emprego-desenvolvedor-fullstack-trabalho-home-office", True, None),
-    # ── Dados (remoto) ───────────────────────────────────────────────────────
-    ("vagas-de-emprego-analista-de-dados-trabalho-home-office",      True, None),
-    ("vagas-de-emprego-cientista-de-dados-trabalho-home-office",     True, None),
-    ("vagas-de-emprego-engenheiro-de-dados-trabalho-home-office",    True, None),
-    ("vagas-de-emprego-analista-de-business-intelligence-trabalho-home-office", True, None),
-    # ── PO / PM (remoto) ─────────────────────────────────────────────────────
-    ("vagas-de-emprego-product-owner-trabalho-home-office",              True, None),
-    ("vagas-de-emprego-product-manager-trabalho-home-office",            True, None),
-    ("vagas-de-emprego-gerente-de-produto-trabalho-home-office",         True, None),
-    # ── QA (remoto) ───────────────────────────────────────────────────────────
-    ("vagas-de-emprego-analista-de-qualidade-trabalho-home-office",      True, None),
-    ("vagas-de-emprego-analista-de-testes-trabalho-home-office",         True, None),
-    ("vagas-de-emprego-quality-assurance-trabalho-home-office",          True, None),
-    # ── CRM (remoto) ─────────────────────────────────────────────────────────
-    ("vagas-de-emprego-analista-de-crm-trabalho-home-office",        True, None),
-    ("vagas-de-emprego-analista-de-salesforce-trabalho-home-office", True, None),
-    # ── Ed. Física (presencial + remoto — filtro por SP em main.py) ──────────
-    ("vagas-de-emprego-professor-de-educacao-fisica",                False, None),
-    ("vagas-de-emprego-personal-trainer",                            False, None),
-    ("vagas-de-emprego-preparador-fisico",                           False, None),
-    ("vagas-de-emprego-professor-de-educacao-fisica-trabalho-home-office", True, None),
+    # CRM genérico
+    ("vagas-de-emprego-analista-de-crm-trabalho-home-office",           True, None),
+    ("vagas-de-emprego-especialista-em-crm-trabalho-home-office",       True, None),
+    ("vagas-de-emprego-coordenador-de-crm-trabalho-home-office",        True, None),
+    ("vagas-de-emprego-gerente-de-crm-trabalho-home-office",            True, None),
+    ("vagas-de-emprego-diretor-de-crm-trabalho-home-office",            True, None),
+    ("vagas-de-emprego-consultor-de-crm-trabalho-home-office",          True, None),
+    ("vagas-de-emprego-crm-trabalho-home-office",                       True, None),
+    # CRM Marketing
+    ("vagas-de-emprego-crm-marketing-trabalho-home-office",             True, None),
+    ("vagas-de-emprego-marketing-de-relacionamento-trabalho-home-office", True, None),
+    ("vagas-de-emprego-marketing-automation-trabalho-home-office",      True, None),
+    ("vagas-de-emprego-lifecycle-marketing-trabalho-home-office",       True, None),
+    ("vagas-de-emprego-analista-de-campanhas-trabalho-home-office",     True, None),
+    # Salesforce
+    ("vagas-de-emprego-salesforce-trabalho-home-office",                True, None),
+    ("vagas-de-emprego-analista-de-salesforce-trabalho-home-office",    True, None),
+    ("vagas-de-emprego-salesforce-developer-trabalho-home-office",      True, None),
+    ("vagas-de-emprego-salesforce-administrator-trabalho-home-office",  True, None),
+    ("vagas-de-emprego-salesforce-consultant-trabalho-home-office",     True, None),
+    ("vagas-de-emprego-marketing-cloud-trabalho-home-office",           True, None),
+    # HubSpot
+    ("vagas-de-emprego-hubspot-trabalho-home-office",                   True, None),
+    ("vagas-de-emprego-analista-de-hubspot-trabalho-home-office",       True, None),
+    # RD Station
+    ("vagas-de-emprego-rd-station-trabalho-home-office",                True, None),
+    # Outras plataformas
+    ("vagas-de-emprego-dynamics-crm-trabalho-home-office",              True, None),
+    ("vagas-de-emprego-pipedrive-trabalho-home-office",                 True, None),
+    ("vagas-de-emprego-activecampaign-trabalho-home-office",            True, None),
+    ("vagas-de-emprego-braze-trabalho-home-office",                     True, None),
+    ("vagas-de-emprego-klaviyo-trabalho-home-office",                   True, None),
 ]
 
 
