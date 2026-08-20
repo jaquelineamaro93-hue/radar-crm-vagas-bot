@@ -3,7 +3,7 @@ Scraper para Gupy — focado em CRM e áreas correlatas.
 API: employability-portal.gupy.io/api/v1/jobs
 """
 import requests
-from base import classify
+from .base import classify
 
 SOURCE = "Gupy"
 API_URL = "https://employability-portal.gupy.io/api/v1/jobs"
