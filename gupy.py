@@ -1,11 +1,12 @@
 """
 Scraper para Gupy — focado em CRM e áreas correlatas.
+API: employability-portal.gupy.io/api/v1/jobs
 """
 import requests
 from base import classify
 
 SOURCE = "Gupy"
-API_URL = "https://portal.api.gupy.io/api/v1/jobs"
+API_URL = "https://employability-portal.gupy.io/api/v1/jobs"
 
 
 def scrape() -> list[dict]:
@@ -22,20 +23,20 @@ def scrape() -> list[dict]:
         "crm", "analista de crm", "especialista crm", "gerente crm",
         "diretor crm", "head crm", "consultor crm", "desenvolvedor crm",
         "crm marketing", "marketing de relacionamento", "marketing automation",
-        "jornada do cliente", "canais digitais", "analista de campanhas",
+        "jornada do cliente", "analista de campanhas", "lifecycle marketing",
         "salesforce", "salesforce administrator", "salesforce developer",
         "salesforce consultant", "analista salesforce", "marketing cloud",
         "hubspot", "analista hubspot", "especialista hubspot",
         "rd station", "analista rd station",
         "dynamics crm", "pipedrive", "activecampaign", "braze", "klaviyo",
-        "growth crm", "crm analytics", "lifecycle marketing",
-        "automacao de marketing", "implementacao crm",
+        "growth crm", "crm analytics", "automacao de marketing",
+        "implementacao crm", "loyalty crm",
     ]
 
     for query in searches:
         try:
             params = {"jobName": query, "limit": 20, "offset": 0, "isRemoteWork": "true"}
-            resp = session.get(API_URL, params=params, timeout=(5, 8))
+            resp = session.get(API_URL, params=params, timeout=(5, 10))
             if resp.status_code != 200:
                 continue
 
