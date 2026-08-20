@@ -7,8 +7,9 @@ from .infojobs import scrape as scrape_infojobs
 from .nerdin import scrape as scrape_nerdin
 from .empregoscom import scrape as scrape_empregoscom
 from .dribbble import scrape as scrape_dribbble
-from .remotar import scrape as scrape_remotar
 from .solides import scrape as scrape_solides
+from .jobs99 import scrape as scrape_jobs99
+from .catho import scrape as scrape_catho
 
 ALL_SCRAPERS = [
     scrape_linkedin,
@@ -20,6 +21,7 @@ ALL_SCRAPERS = [
     scrape_nerdin,
     scrape_empregoscom,
     scrape_dribbble,
-    scrape_remotar,
     scrape_solides,
+    scrape_jobs99,
+    scrape_catho,
 ]
