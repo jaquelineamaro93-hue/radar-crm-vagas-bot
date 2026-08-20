@@ -1,5 +1,5 @@
 """
-Scraper para LinkedIn Jobs — focado exclusivamente em CRM e áreas correlatas.
+Scraper para LinkedIn Jobs (busca pública, sem login).
 """
 import time
 import requests
@@ -7,64 +7,73 @@ from .base import classify, relative_to_iso
 
 SOURCE = "LinkedIn"
 
+# (keyword, location, f_WT, f_TPR)
+# f_WT: "1"=presencial, "2"=remoto
+# f_TPR: r2592000=30d, r5184000=60d
 SEARCHES = [
-    # CRM genérico — todos os níveis
-    ("crm", "Brazil", "2", "r5184000"),
+    # DADOS — 60 dias, populate inicial
+    ("analista de dados", "Brazil", "2", "r5184000"),
+    ("data analyst", "Brazil", "2", "r5184000"),
+    ("cientista de dados", "Brazil", "2", "r5184000"),
+    ("data scientist", "Brazil", "2", "r5184000"),
+    ("engenheiro de dados", "Brazil", "2", "r5184000"),
+    ("data engineer", "Brazil", "2", "r5184000"),
+    ("analytics engineer", "Brazil", "2", "r5184000"),
+    ("machine learning engineer", "Brazil", "2", "r5184000"),
+    ("business intelligence", "Brazil", "2", "r5184000"),
+    # PO / PM — 60 dias, populate inicial
+    ("product owner", "Brazil", "2", "r5184000"),
+    ("product manager", "Brazil", "2", "r5184000"),
+    ("gerente de produto", "Brazil", "2", "r5184000"),
+    ("head de produto", "Brazil", "2", "r5184000"),
+    ("product lead remoto", "Brazil", "2", "r5184000"),
+    # QA — 60 dias, populate inicial
+    ("analista de qualidade remoto", "Brazil", "2", "r5184000"),
+    ("quality analyst", "Brazil", "2", "r5184000"),
+    ("qa engineer", "Brazil", "2", "r5184000"),
+    ("analista de testes remoto", "Brazil", "2", "r5184000"),
+    ("quality assurance remoto", "Brazil", "2", "r5184000"),
+    ("sdet", "Brazil", "2", "r5184000"),
+    # CRM PRIMEIRO — 60 dias, prioridade máxima para populate inicial
+    ("analista crm", "Brazil", "2", "r5184000"),
     ("analista de crm", "Brazil", "2", "r5184000"),
-    ("especialista crm", "Brazil", "2", "r5184000"),
-    ("coordenador crm", "Brazil", "2", "r5184000"),
-    ("gerente crm", "Brazil", "2", "r5184000"),
-    ("diretor crm", "Brazil", "2", "r5184000"),
-    ("head crm", "Brazil", "2", "r5184000"),
-    ("consultor crm", "Brazil", "2", "r5184000"),
-    ("desenvolvedor crm", "Brazil", "2", "r5184000"),
-    ("crm manager", "Brazil", "2", "r5184000"),
     ("crm specialist", "Brazil", "2", "r5184000"),
-    ("crm analyst", "Brazil", "2", "r5184000"),
-    ("crm director", "Brazil", "2", "r5184000"),
-    # CRM Marketing / Relacionamento
-    ("crm marketing", "Brazil", "2", "r5184000"),
-    ("marketing de relacionamento", "Brazil", "2", "r5184000"),
-    ("marketing automation", "Brazil", "2", "r5184000"),
-    ("automacao de marketing", "Brazil", "2", "r5184000"),
-    ("lifecycle marketing", "Brazil", "2", "r5184000"),
-    ("jornada do cliente", "Brazil", "2", "r5184000"),
-    ("canais digitais crm", "Brazil", "2", "r5184000"),
-    ("analista de campanhas", "Brazil", "2", "r5184000"),
-    ("growth crm", "Brazil", "2", "r5184000"),
-    ("crm analytics", "Brazil", "2", "r5184000"),
-    # Salesforce
-    ("salesforce", "Brazil", "2", "r5184000"),
     ("salesforce administrator", "Brazil", "2", "r5184000"),
+    ("salesforce analyst", "Brazil", "2", "r5184000"),
     ("salesforce developer", "Brazil", "2", "r5184000"),
-    ("salesforce consultant", "Brazil", "2", "r5184000"),
-    ("analista salesforce", "Brazil", "2", "r5184000"),
-    ("marketing cloud", "Brazil", "2", "r5184000"),
-    ("salesforce marketing cloud", "Brazil", "2", "r5184000"),
-    # HubSpot
-    ("hubspot", "Brazil", "2", "r5184000"),
-    ("analista hubspot", "Brazil", "2", "r5184000"),
-    ("hubspot administrator", "Brazil", "2", "r5184000"),
-    # RD Station
-    ("rd station", "Brazil", "2", "r5184000"),
-    ("analista rd station", "Brazil", "2", "r5184000"),
-    # Outras plataformas CRM
-    ("dynamics crm", "Brazil", "2", "r5184000"),
-    ("pipedrive", "Brazil", "2", "r5184000"),
-    ("activecampaign", "Brazil", "2", "r5184000"),
-    ("braze", "Brazil", "2", "r5184000"),
-    ("klaviyo", "Brazil", "2", "r5184000"),
-    ("oracle responsys", "Brazil", "2", "r5184000"),
-    # Implementação / Funcional / Dev CRM
-    ("implementacao crm", "Brazil", "2", "r5184000"),
-    ("analista funcional crm", "Brazil", "2", "r5184000"),
-    ("consultor funcional crm", "Brazil", "2", "r5184000"),
-    # Loyalty / Fidelização
-    ("loyalty crm", "Brazil", "2", "r5184000"),
-    ("fidelizacao clientes crm", "Brazil", "2", "r5184000"),
+    ("crm manager", "Brazil", "2", "r5184000"),
+    # Designer (remoto)
+    ("designer remoto", "Brazil", "2", "r2592000"),
+    ("customer success remoto", "Brazil", "2", "r2592000"),
+    ("customer experience remoto", "Brazil", "2", "r2592000"),
+    ("UX UI product designer", "Brazil", "2", "r2592000"),
+    # Dev (remoto)
+    ("desenvolvedor remoto", "Brazil", "2", "r2592000"),
+    ("programador remoto", "Brazil", "2", "r2592000"),
+    ("developer remote", "Brazil", "2", "r2592000"),
+    ("frontend developer remoto", "Brazil", "2", "r2592000"),
+    ("backend developer remoto", "Brazil", "2", "r2592000"),
+    ("fullstack developer remoto", "Brazil", "2", "r2592000"),
+    ("software engineer remoto", "Brazil", "2", "r2592000"),
+    # Tech Lead / Gestão de Tecnologia (remoto)
+    ("tech lead remoto", "Brazil", "2", "r2592000"),
+    ("engineering manager", "Brazil", "2", "r2592000"),
+    ("gerente de engenharia", "Brazil", "2", "r2592000"),
+    ("gerente de tecnologia", "Brazil", "2", "r2592000"),
+    ("head of engineering", "Brazil", "2", "r2592000"),
+    ("CTO remoto", "Brazil", "2", "r2592000"),
+    # Ed. Física — remoto
+    ("professor educação física remoto", "Brazil", "2", "r2592000"),
+    ("personal trainer remoto", "Brazil", "2", "r2592000"),
+    ("preparador físico remoto", "Brazil", "2", "r2592000"),
+    # Ed. Física — presencial em São Paulo
+    ("professor educação física", "São Paulo, Brazil", "1", "r2592000"),
+    ("personal trainer", "São Paulo, Brazil", "1", "r2592000"),
+    ("preparador físico", "São Paulo, Brazil", "1", "r2592000"),
+    ("instrutor academia", "São Paulo, Brazil", "1", "r2592000"),
+    ("professor musculação", "São Paulo, Brazil", "1", "r2592000"),
 ]
 
-BASE_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 BASE_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 
 

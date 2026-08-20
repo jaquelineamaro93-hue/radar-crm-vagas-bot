@@ -1,5 +1,6 @@
 """
 Scraper para Gupy — focado em CRM e áreas correlatas.
+API: employability-portal.gupy.io/api/v1/jobs
 """
 import requests
 from .base import classify
@@ -25,7 +26,8 @@ def scrape() -> list[dict]:
         "jornada do cliente", "analista de campanhas", "lifecycle marketing",
         "salesforce", "salesforce administrator", "salesforce developer",
         "salesforce consultant", "analista salesforce", "marketing cloud",
-        "hubspot", "analista hubspot", "rd station", "analista rd station",
+        "hubspot", "analista hubspot", "especialista hubspot",
+        "rd station", "analista rd station",
         "dynamics crm", "pipedrive", "activecampaign", "braze", "klaviyo",
         "growth crm", "crm analytics", "automacao de marketing",
         "implementacao crm", "loyalty crm",
