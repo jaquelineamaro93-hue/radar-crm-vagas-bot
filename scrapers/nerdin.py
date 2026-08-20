@@ -25,6 +25,20 @@ GENERAL_URL = f"{BASE_URL}/vagas.php"
 _REMOTE_WORDS = {"home office", "ho", "remoto", "remote", "100% remoto", "trabalho remoto"}
 MAX_PAGES = 4
 
+CRM_SEARCHES = [
+    f"{BASE_URL}/vagas.php?q=crm",
+    f"{BASE_URL}/vagas.php?q=salesforce",
+    f"{BASE_URL}/vagas.php?q=hubspot",
+    f"{BASE_URL}/vagas.php?q=rd+station",
+    f"{BASE_URL}/vagas.php?q=marketing+relacionamento",
+    f"{BASE_URL}/vagas.php?q=crm+marketing",
+    f"{BASE_URL}/vagas.php?q=braze",
+    f"{BASE_URL}/vagas.php?q=klaviyo",
+    f"{BASE_URL}/vagas.php?q=pipedrive",
+    f"{BASE_URL}/vagas.php?q=marketing+automation",
+]
+
+
 
 def _is_remote(loc: str) -> bool:
     lower = loc.lower()
@@ -111,6 +125,20 @@ def _parse_page(html: str, seen: set) -> list[dict]:
 def scrape() -> list[dict]:
     vagas: list[dict] = []
     seen: set[str] = set()
+
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "pt-BR,pt;q=0.9",
+    })
+
+    for url in CRM_SEARCHES:
+        try:
+            resp = session.get(url, timeout=(5, 12))
+            if resp.status_code == 200:
+                vagas.extend(_parse_page(resp.text, seen))
+        except Exception as e:
+            print(f"[Nerdin] Erro '{url}': {e}")
 
     session = requests.Session()
     session.headers.update({
