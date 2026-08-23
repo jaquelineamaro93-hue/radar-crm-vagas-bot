@@ -4,6 +4,7 @@ O cron do Vercel chama GET /api/scrape todo dia às 9h UTC.
 """
 from flask import Flask, request, jsonify
 import os
+import json
 
 app = Flask(__name__)
 
