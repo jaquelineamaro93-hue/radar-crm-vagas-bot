@@ -989,24 +989,19 @@ REQUEST_DELAY = float(os.getenv("REQUEST_DELAY", "0"))  # 0 em serverless
 
 
 # Termos que devem ser EXCLUÍDOS (não são CRM/Growth/MarTech)
+
+
+
+
 BLACKLIST = {
     "exclude": [
-        "auxiliar de vendas",
-        "telemarketing",
-        "operador de telemarketing",
-        "promotor de vendas",
-        "vendedor porta a porta",
-        "vendedor de loja",
-        "balconista",
-        "atendente de loja",
-        "gerente de loja",
-        "supervisor de loja",
-        "telefonista",
-        "recepcionista",
-        "office boy",
-        "almoxarife",
-        "motorista",
-        "entregador",
-        "operador de caixa",
+        "vendas", "vendedor", "consultor de vendas", "gerente de vendas",
+        "coordenador de vendas", "supervisor de vendas", "executivo de vendas",
+        "promotor", "auxiliar de vendas", "assistente de vendas",
+        "telemarketing", "operador", "telefonista", "recepcionista",
+        "office boy", "almoxarife", "motorista", "entregador", "operador de caixa",
+        "balconista", "atendente de loja", "gerente de loja", "supervisor de loja",
+        "porta a porta", "loja", "varejo", "comércio", "retail",
+        "técnico de campo", "técnico assistência", "suporte técnico campo",
     ]
 }
