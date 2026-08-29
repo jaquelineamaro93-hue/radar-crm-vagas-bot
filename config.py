@@ -74,6 +74,23 @@ KEYWORDS = {
         "head ai-driven crm growth",
         "tech lead agentes ia martech",
         "gerente agentes ia inovacao crm",
+    ,
+        "crm copywriter",
+        "lifecycle copywriter",
+        "growth copywriter",
+        "copywriter whatsapp push sms",
+        "email marketing copywriter",
+        "crm designer",
+        "lifecycle designer",
+        "email marketing designer",
+        "designer whatsapp push in-app",
+        "forward deployed engineer",
+        "ai agent architect",
+        "desenvolvedor de agentes de ia",
+        "ia conversacional whatsapp",
+        "prompt engineer crm vendas",
+        "ai martech operations",
+        "head ai customer experience"
     ]
 }
 
