@@ -1,0 +1,18 @@
+==================================================
+Iniciando coleta de vagas...
+[Solides] 0 vagas encontradas
+[99jobs] 0 vagas encontradas
+[Vagas.com] 0 vagas encontradas
+[LinkedIn] 90 vagas encontradas
+[Gupy] 258 vagas encontradas
+[InfoJobs] 83 vagas encontradas
+[WARN] Timeout global — usando vagas coletadas até agora
+[Catho] 682 vagas encontradas
+Total coletado: 431 | Após filtros (remoto + 30 dias): 410
+Traceback (most recent call last):
+  File "/workspaces/radar-crm-vagas-bot/main.py", line 98, in <module>
+    run()
+  File "/workspaces/radar-crm-vagas-bot/main.py", line 79, in run
+    send_vaga(vaga)
+    ^^^^^^^^^
+NameError: name 'send_vaga' is not defined. Did you mean: 'save_vaga'?

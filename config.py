@@ -1105,3 +1105,7 @@ TERMOS_PDF = [
 
 if "crm" in KEYWORDS:
     KEYWORDS["crm"].extend(TERMOS_PDF)
+
+
+# BLACKLIST - Excluir vagas de vendas genéricas
+BLACKLIST_VENDAS = {'telefonista', 'loja', 'comércio', 'vendas online', 'porta a porta', 'almoxarife', 'executivo de vendas', 'auxiliar de vendas', 'promotor de vendas', 'coordenador de vendas', 'operador de telemarketing', 'gerente de vendas', 'agente de vendas', 'operador de caixa', 'balconista', 'consultor de vendas', 'motorista', 'dropshipping', 'office boy', 'vendas', 'representante de vendas', 'vendedor', 'supervisor de loja', 'retail', 'assistente de vendas', 'atendente de loja', 'gerente de loja', 'entregador', 'recepcionista', 'supervisor de vendas', 'e-commerce seller', 'telemarketing'}
