@@ -1,17 +1,5 @@
 import requests
-from config import (
-    DISCORD_WEBHOOK_URL,
-    DISCORD_WEBHOOK_DESIGNER,
-    DISCORD_WEBHOOK_DESIGNER_2,
-    DISCORD_WEBHOOK_CXCS,
-    DISCORD_WEBHOOK_AUTOMACAO,
-    DISCORD_WEBHOOK_DEV,
-    DISCORD_WEBHOOK_EDFIS,
-    DISCORD_WEBHOOK_CRM,
-    DISCORD_WEBHOOK_DATA,
-    DISCORD_WEBHOOK_POPM,
-    DISCORD_WEBHOOK_QA,
-)
+# Discord removido
 from scrapers.base import format_date, extract_seniority
 
 CATEGORY_COLORS = {
@@ -97,7 +85,7 @@ def _get_webhooks(category: str) -> list[str]:
     return [w for w in [DISCORD_WEBHOOK_URL] if w]
 
 
-def send_vaga(vaga: dict):
+def send_vaga_disabled(vaga: dict):
     webhooks = _get_webhooks(vaga.get("category", ""))
     if not webhooks:
         print("[WARN] Nenhum webhook configurado.")
