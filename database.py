@@ -193,3 +193,33 @@ def save_vaga(vaga: dict):
         _sqlite_save(url_h, vaga)
         if sem_h:
             _sqlite_sem_save(sem_h)
+
+
+
+def upload_to_supabase(vaga: dict):
+    """Salva vaga no Supabase vagas_scraper"""
+    import requests
+    import os
+    
+    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    key = os.getenv("SUPABASE_ANON_KEY", "")
+    
+    if not url or not key:
+        return False
+    
+    try:
+        resp = requests.post(
+            f"{url}/rest/v1/vagas_scraper",
+            headers={
+                "apikey": key,
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+                "Prefer": "return=minimal"
+            },
+            json=vaga,
+            timeout=10
+        )
+        return resp.status_code in (201, 204)
+    except Exception as e:
+        print(f"[WARN] Erro ao salvar no Supabase: {e}")
+        return False

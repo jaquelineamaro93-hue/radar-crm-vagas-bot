@@ -5,7 +5,7 @@ Roda os scrapers em paralelo para caber no timeout de 60s do Vercel.
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from database import init_db, is_duplicate, save_vaga
+from database import init_db, is_duplicate, save_vaga, upload_to_supabase
 from notifier import send_vaga
 from supabase_sync import sync_vaga_crm
 from scrapers import ALL_SCRAPERS
@@ -71,6 +71,10 @@ def run() -> int:
             continue
 
         save_vaga(vaga)
+
+
+        upload_to_supabase(vaga)
+        upload_to_supabase(vaga)
         send_vaga(vaga)
         sync_vaga_crm(vaga)
         total_novas += 1
