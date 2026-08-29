@@ -820,6 +820,74 @@ KEYWORDS = {
         "profissional de dados", "especialista em dados",
         "data steward", "data governance",
         "analista de dados jr", "analista de dados pleno", "analista de dados senior",
+        "copywriter de crm",
+        "redator de crm",
+        "redator de crm marketing",
+        "lifecycle copywriter",
+        "redator de ciclo de vida",
+        "growth copywriter",
+        "growth writer",
+        "copywriter de inbound e automacao",
+        "copywriter de inbound",
+        "copywriter de mensageria e conversao",
+        "copywriter de revops",
+        "sales enablement",
+        "conversational copywriter",
+        "redator para agentes de ia",
+        "email marketing copywriter",
+        "ux writer",
+        "microcopy specialist",
+        "designer de crm",
+        "crm designer",
+        "lifecycle designer",
+        "growth designer",
+        "designer de automacao de marketing",
+        "email marketing designer",
+        "designer de canais proprietarios",
+        "visual designer",
+        "designer de retencao",
+        "martech visual specialist",
+        "ui designer",
+        "forward deployed engineer",
+        "fde",
+        "ai agent architect",
+        "desenvolvedor de agentes de ia",
+        "ai solutions architect",
+        "ai agent product manager",
+        "pm de agentes de ia",
+        "engenheiro de integracao de agentes",
+        "prompt engineer",
+        "engenheiro de prompt",
+        "especialista em ia conversacional",
+        "salesforce marketing cloud",
+        "salesforce admin",
+        "salesforce architect",
+        "especialista salesforce",
+        "desenvolvedor salesforce",
+        "hubspot admin",
+        "hubspot specialist",
+        "especialista hubspot",
+        "hubspot crm",
+        "revops hubspot",
+        "braze specialist",
+        "especialista braze",
+        "insider one specialist",
+        "especialista insider",
+        "analista de crm",
+        "especialista de crm",
+        "gerente de crm",
+        "head de crm",
+        "customer success manager",
+        "csm",
+        "customer experience",
+        "cx",
+        "retention specialist",
+        "especialista retencao",
+        "lifecycle marketing manager",
+        "growth specialist",
+        "especialista growth",
+        "martech specialist",
+        "especialista martech",
     ],
     "edfis": [
         # Cargo principal
@@ -1005,3 +1073,35 @@ BLACKLIST = {
         "técnico de campo", "técnico assistência", "suporte técnico campo",
     ]
 }
+
+# Termos do PDF adicionados
+TERMOS_PDF = [
+    "crm copywriter", "lifecycle copywriter", "growth copywriter",
+    "crm designer", "lifecycle designer", "growth designer",
+    "forward deployed engineer", "fde", "ai agent architect",
+    "prompt engineer", "email marketing copywriter", "ux writer",
+    "email marketing designer", "visual designer", "martech visual specialist",
+    "salesforce marketing cloud", "salesforce admin", "salesforce architect",
+    "hubspot admin", "hubspot specialist", "revops hubspot",
+    "braze specialist", "insider one specialist", "lifecycle marketing",
+    "mobile crm engagement", "omnichannel retention", "product growth analyst"
+]
+
+if "crm" in KEYWORDS:
+    KEYWORDS["crm"].extend(TERMOS_PDF)
+
+# Termos do PDF adicionados
+TERMOS_PDF = [
+    "crm copywriter", "lifecycle copywriter", "growth copywriter",
+    "crm designer", "lifecycle designer", "growth designer",
+    "forward deployed engineer", "fde", "ai agent architect",
+    "prompt engineer", "email marketing copywriter", "ux writer",
+    "email marketing designer", "visual designer", "martech visual specialist",
+    "salesforce marketing cloud", "salesforce admin", "salesforce architect",
+    "hubspot admin", "hubspot specialist", "revops hubspot",
+    "braze specialist", "insider one specialist", "lifecycle marketing",
+    "mobile crm engagement", "omnichannel retention", "product growth analyst"
+]
+
+if "crm" in KEYWORDS:
+    KEYWORDS["crm"].extend(TERMOS_PDF)
