@@ -5,7 +5,7 @@ Roda os scrapers em paralelo para caber no timeout de 60s do Vercel.
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from database import init_db, is_duplicate, save_vaga, upload_to_supabase, is_blacklisted
+from database import init_db, is_duplicate, save_vaga, upload_to_supabase, is_vendas_vaga, is_blacklisted
 # Notifier removido
 from supabase_sync import sync_vaga_crm
 from scrapers import ALL_SCRAPERS

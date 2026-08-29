@@ -237,3 +237,7 @@ def is_blacklisted(vaga: dict):
             return True
     
     return False
+
+def is_vendas_vaga(vaga: dict):
+    from config import BLACKLIST_VENDAS
+    return any(term.lower() in vaga.get("title", "").lower() for term in BLACKLIST_VENDAS)
