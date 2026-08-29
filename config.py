@@ -76,3 +76,27 @@ KEYWORDS = {
         "gerente agentes ia inovacao crm",
     ]
 }
+
+# Novos termos: Copy, Design, IA e Agentes
+NOVOS_TERMOS = {
+    "copywriting_design": [
+        "crm copywriter", "lifecycle copywriter", "growth copywriter",
+        "copywriter whatsapp push sms", "email marketing copywriter",
+        "crm designer", "lifecycle designer", "email marketing designer",
+        "designer whatsapp push in-app", "martech visual specialist",
+        "creative growth specialist", "ux writer jornadas",
+    ],
+    "ia_agentes": [
+        "forward deployed engineer", "ai agent architect",
+        "desenvolvedor de agentes de ia", "ai solutions architect crm",
+        "ai agent product manager", "ia conversacional whatsapp",
+        "prompt engineer crm vendas", "conversational ai product owner",
+        "automacao atendimento ia", "arquiteto de bots agentes",
+        "ai martech operations", "cdp ai data specialist",
+        "head ai customer experience", "head ai-driven crm growth",
+    ]
+}
+
+# Mesclar com config existente
+CONFIG["crm"].extend(NOVOS_TERMOS["copywriting_design"])
+CONFIG["crm"].extend(NOVOS_TERMOS["ia_agentes"])
