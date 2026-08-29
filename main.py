@@ -5,7 +5,7 @@ Roda os scrapers em paralelo para caber no timeout de 60s do Vercel.
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from database import init_db, is_duplicate, save_vaga, upload_to_supabase
+from database import init_db, is_duplicate, save_vaga, upload_to_supabase, is_blacklisted
 # Notifier removido
 from supabase_sync import sync_vaga_crm
 from scrapers import ALL_SCRAPERS
@@ -76,7 +76,7 @@ def run() -> int:
 
         upload_to_supabase(vaga)
         upload_to_supabase(vaga)
-        send_vaga(vaga)
+            # send_vaga removido
         sync_vaga_crm(vaga)
         total_novas += 1
         time.sleep(0.15)  # rate limit Discord (~6 msg/s, abaixo do limite de 5/2s por webhook)

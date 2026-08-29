@@ -223,3 +223,17 @@ def upload_to_supabase(vaga: dict):
     except Exception as e:
         print(f"[WARN] Erro ao salvar no Supabase: {e}")
         return False
+
+
+
+def is_blacklisted(vaga: dict):
+    """Verifica se vaga deve ser excluída"""
+    from config import BLACKLIST
+    
+    title = vaga.get("title", "").lower()
+    
+    for term in BLACKLIST.get("exclude", []):
+        if term.lower() in title:
+            return True
+    
+    return False

@@ -985,3 +985,28 @@ HEADERS = {
 
 REQUEST_TIMEOUT = 8
 REQUEST_DELAY = float(os.getenv("REQUEST_DELAY", "0"))  # 0 em serverless
+
+
+
+# Termos que devem ser EXCLUÍDOS (não são CRM/Growth/MarTech)
+BLACKLIST = {
+    "exclude": [
+        "auxiliar de vendas",
+        "telemarketing",
+        "operador de telemarketing",
+        "promotor de vendas",
+        "vendedor porta a porta",
+        "vendedor de loja",
+        "balconista",
+        "atendente de loja",
+        "gerente de loja",
+        "supervisor de loja",
+        "telefonista",
+        "recepcionista",
+        "office boy",
+        "almoxarife",
+        "motorista",
+        "entregador",
+        "operador de caixa",
+    ]
+}
