@@ -72,14 +72,9 @@ def run() -> int:
 
         save_vaga(vaga)
         upload_to_supabase(vaga)
-
-
-        upload_to_supabase(vaga)
-        upload_to_supabase(vaga)
-            # send_vaga removido
         sync_vaga_crm(vaga)
         total_novas += 1
-        time.sleep(0.15)  # rate limit Discord (~6 msg/s, abaixo do limite de 5/2s por webhook)
+        time.sleep(0.15)
 
     print(f"Novas vagas enviadas ao Discord: {total_novas}")
     print("=" * 50)
