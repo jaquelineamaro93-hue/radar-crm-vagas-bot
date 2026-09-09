@@ -21,7 +21,10 @@ def _url_hash(url: str) -> str:
 def sync_vaga_crm(vaga: dict):
     if not _configured():
         return
-    if vaga.get("category") != "crm":
+    # Sincroniza TODAS as categorias relevantes para vagas_crm
+    # (não apenas "crm")
+    relevant_categories = {"crm", "data", "po_pm", "qa", "designer", "dev", "cxcs", "edfis", "automacao_presencial", "automacao_remote"}
+    if vaga.get("category") not in relevant_categories:
         return
     if not vaga.get("title") or not vaga.get("url"):
         return
