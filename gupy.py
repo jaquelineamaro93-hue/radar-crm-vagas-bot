@@ -35,41 +35,59 @@ def scrape() -> list[dict]:
 
     for query in searches:
         try:
-            params = {"jobName": query, "limit": 20, "offset": 0, "isRemoteWork": "true"}
-            resp = session.get(API_URL, params=params, timeout=(5, 10))
-            if resp.status_code != 200:
-                continue
+            offset = 0
+            page = 0
+            max_pages = 10  # Limite de segurança para não fazer requisições infinitas
 
-            for job in resp.json().get("data", []):
-                url = job.get("jobUrl", "") or f"https://portal.gupy.io/job/{job.get('id','')}"
-                if url in seen_urls:
-                    continue
-                seen_urls.add(url)
+            while page < max_pages:
+                params = {"jobName": query, "limit": 20, "offset": offset, "isRemoteWork": "true"}
+                resp = session.get(API_URL, params=params, timeout=(5, 10))
+                if resp.status_code != 200:
+                    break
 
-                title = job.get("name", "")
-                if not title:
-                    continue
+                data = resp.json().get("data", [])
+                if not data:  # Sem mais resultados
+                    break
 
-                category = classify(title)
-                if not category:
-                    continue
+                page_count = 0
+                for job in data:
+                    url = job.get("jobUrl", "") or f"https://portal.gupy.io/job/{job.get('id','')}"
+                    if url in seen_urls:
+                        continue
+                    seen_urls.add(url)
 
-                city = job.get("city", "")
-                state = job.get("state", "")
-                loc = f"{city}, {state}".strip(", ") if (city or state) else "Remoto"
+                    title = job.get("name", "")
+                    if not title:
+                        continue
 
-                vagas.append({
-                    "title": title,
-                    "company": job.get("careerPageName", "Não informado"),
-                    "url": url,
-                    "location": loc,
-                    "description": job.get("description", "")[:300],
-                    "source": SOURCE,
-                    "category": category,
-                    "published_at": None,
-                })
+                    category = classify(title)
+                    if not category:
+                        continue
+
+                    city = job.get("city", "")
+                    state = job.get("state", "")
+                    loc = f"{city}, {state}".strip(", ") if (city or state) else "Remoto"
+
+                    vagas.append({
+                        "title": title,
+                        "company": job.get("careerPageName", "Não informado"),
+                        "url": url,
+                        "location": loc,
+                        "description": job.get("description", "")[:300],
+                        "source": SOURCE,
+                        "category": category,
+                        "published_at": None,
+                    })
+                    page_count += 1
+
+                if page_count == 0:
+                    break
+
+                offset += 20
+                page += 1
+
         except Exception as e:
-            print(f"[Gupy] Erro em '{query}': {e}")
+            print(f"[Gupy] Erro em '{query}' (offset {offset}): {e}")
 
     print(f"[Gupy] {len(vagas)} vagas encontradas")
     return vagas

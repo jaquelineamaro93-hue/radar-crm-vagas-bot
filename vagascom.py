@@ -83,17 +83,25 @@ def scrape() -> list[dict]:
     })
 
     for slug, remote_only, forced_cat in SEARCHES:
-        url = f"{BASE_URL}/{slug}"
-        if remote_only:
-            url += "?homeoffice=1"
-        try:
-            resp = session.get(url, timeout=(5, 10))
-            if resp.status_code != 200:
-                continue
+        page = 1
+        max_pages = 15  # Limite de segurança
 
-            soup = BeautifulSoup(resp.text, "html.parser")
+        while page <= max_pages:
+            url = f"{BASE_URL}/{slug}?p={page}"
+            if remote_only:
+                url += "&homeoffice=1"
+            try:
+                resp = session.get(url, timeout=(5, 10))
+                if resp.status_code != 200:
+                    break
 
-            for card in soup.select("li.vaga"):
+                soup = BeautifulSoup(resp.text, "html.parser")
+                cards = soup.select("li.vaga")
+
+                if not cards:  # Sem mais vagas
+                    break
+
+                for card in cards:
                 link_el  = card.select_one("a.link-detalhes-vaga")
                 comp_el  = card.select_one("span.emprVaga")
                 loc_el   = card.select_one(".vaga-local")
@@ -144,8 +152,11 @@ def scrape() -> list[dict]:
                     "published_at": published_at,
                 })
 
-        except Exception as e:
-            print(f"[Vagas.com] {slug}: {e}")
+                page += 1
+
+            except Exception as e:
+                print(f"[Vagas.com] {slug} (página {page}): {e}")
+                break
 
     print(f"[Vagas.com] {len(vagas)} vagas encontradas")
     return vagas

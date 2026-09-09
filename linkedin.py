@@ -90,54 +90,66 @@ def scrape() -> list[dict]:
     })
 
     for keyword, location, f_wt, f_tpr in SEARCHES:
-        params = {
-            "keywords": keyword,
-            "location": location,
-            "f_WT": f_wt,
-            "f_TPR": f_tpr,
-            "start": 0,
-        }
-        try:
-            resp = session.get(BASE_URL, params=params, timeout=(5, 8))
-            if resp.status_code != 200:
-                continue
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(resp.text, "html.parser")
-            for card in soup.select("li"):
-                title_el = card.select_one(".base-search-card__title, h3")
-                company_el = card.select_one(".base-search-card__subtitle, h4")
-                location_el = card.select_one(".job-search-card__location")
-                time_el = card.select_one("time[datetime]")
-                link_el = card.select_one("a.base-card__full-link, a[href*='/jobs/view/']")
+        start = 0
+        max_pages = 10  # LinkedIn limita, 25 vagas por página
 
-                if not title_el or not link_el:
-                    continue
+        while start < (max_pages * 25):
+            params = {
+                "keywords": keyword,
+                "location": location,
+                "f_WT": f_wt,
+                "f_TPR": f_tpr,
+                "start": start,
+            }
+            try:
+                resp = session.get(BASE_URL, params=params, timeout=(5, 8))
+                if resp.status_code != 200:
+                    break
+                from bs4 import BeautifulSoup
+                soup = BeautifulSoup(resp.text, "html.parser")
+                cards = soup.select("li")
 
-                title = title_el.get_text(strip=True)
-                company = company_el.get_text(strip=True) if company_el else "Não informado"
-                loc = location_el.get_text(strip=True) if location_el else "Remoto"
-                url = link_el.get("href", "").split("?")[0]
+                if not cards:  # Sem mais vagas
+                    break
 
-                # Data de publicação
-                published_at = None
-                if time_el:
-                    published_at = time_el.get("datetime")  # formato: "2024-01-15"
-                    if published_at and len(published_at) == 10:
-                        published_at = published_at + "T00:00:00+00:00"
+                for card in cards:
+                    title_el = card.select_one(".base-search-card__title, h3")
+                    company_el = card.select_one(".base-search-card__subtitle, h4")
+                    location_el = card.select_one(".job-search-card__location")
+                    time_el = card.select_one("time[datetime]")
+                    link_el = card.select_one("a.base-card__full-link, a[href*='/jobs/view/']")
 
-                category = classify(title)
-                if not category:
-                    continue
+                    if not title_el or not link_el:
+                        continue
 
-                vagas.append({
-                    "title": title, "company": company,
-                    "url": url, "location": loc,
-                    "description": "", "source": SOURCE,
-                    "category": category, "published_at": published_at,
-                })
-            time.sleep(0.3)
-        except Exception as e:
-            print(f"[LinkedIn] {keyword}: {e}")
+                    title = title_el.get_text(strip=True)
+                    company = company_el.get_text(strip=True) if company_el else "Não informado"
+                    loc = location_el.get_text(strip=True) if location_el else "Remoto"
+                    url = link_el.get("href", "").split("?")[0]
+
+                    # Data de publicação
+                    published_at = None
+                    if time_el:
+                        published_at = time_el.get("datetime")  # formato: "2024-01-15"
+                        if published_at and len(published_at) == 10:
+                            published_at = published_at + "T00:00:00+00:00"
+
+                    category = classify(title)
+                    if not category:
+                        continue
+
+                    vagas.append({
+                        "title": title, "company": company,
+                        "url": url, "location": loc,
+                        "description": "", "source": SOURCE,
+                        "category": category, "published_at": published_at,
+                    })
+
+                start += 25
+                time.sleep(0.3)
+            except Exception as e:
+                print(f"[LinkedIn] {keyword} (start={start}): {e}")
+                break
 
     print(f"[LinkedIn] {len(vagas)} vagas encontradas")
     return vagas
