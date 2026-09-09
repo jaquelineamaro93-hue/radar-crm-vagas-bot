@@ -1,13 +1,32 @@
 """
 Sincronização de vagas CRM com o Supabase.
-Salva APENAS vagas da categoria 'crm'.
+Salva vagas que pertençam ao ecossistema de CRM/Growth/RevOps/Marketing.
 """
 import hashlib
 import os
 import requests
+import re
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+
+# Keywords do ecossistema CRM/Growth/Marketing
+CRM_KEYWORDS = [
+    "crm",
+    "agentes de ia", "ai agents",
+    "fde",
+    "revops",
+    "growth",
+    "marketing",
+    "salesforce",
+    "hubspot",
+    "insider",
+    "rd station",
+    "braze",
+    "canais digitais",
+    "automacao", "automação",
+    "comunicacao", "comunicação",
+]
 
 
 def _configured() -> bool:
@@ -18,13 +37,24 @@ def _url_hash(url: str) -> str:
     return hashlib.sha256(url.strip().encode()).hexdigest()
 
 
+def _matches_crm_ecosystem(vaga: dict) -> bool:
+    """Verifica se a vaga pertence ao ecossistema de CRM/Growth/Marketing."""
+    text_to_search = " ".join([
+        vaga.get("title", ""),
+        vaga.get("category", ""),
+        vaga.get("description", ""),
+    ]).lower()
+
+    for keyword in CRM_KEYWORDS:
+        if keyword.lower() in text_to_search:
+            return True
+    return False
+
+
 def sync_vaga_crm(vaga: dict):
     if not _configured():
         return
-    # Sincroniza TODAS as categorias relevantes para vagas_crm
-    # (não apenas "crm")
-    relevant_categories = {"crm", "data", "po_pm", "qa", "designer", "dev", "cxcs", "edfis", "automacao_presencial", "automacao_remote"}
-    if vaga.get("category") not in relevant_categories:
+    if not _matches_crm_ecosystem(vaga):
         return
     if not vaga.get("title") or not vaga.get("url"):
         return
