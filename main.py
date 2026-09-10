@@ -41,6 +41,14 @@ def run() -> int:
     print("=" * 50)
     print("Iniciando coleta de vagas...")
 
+    # Debug: verificar qual chave está sendo usada
+    import os
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    anon_key = os.getenv("SUPABASE_ANON_KEY", "")
+    print(f"[DEBUG] SERVICE_ROLE_KEY presente: {bool(service_key)} (len={len(service_key) if service_key else 0})")
+    print(f"[DEBUG] ANON_KEY presente: {bool(anon_key)} (len={len(anon_key) if anon_key else 0})")
+    print(f"[DEBUG] Será usado: {'SERVICE_ROLE' if service_key else 'ANON'}")
+
     init_db()
 
     all_vagas: list[dict] = []
