@@ -90,7 +90,7 @@ def run() -> int:
             continue
 
         try:
-            save_vaga(vaga)
+            # save_vaga(vaga)  # Removido: SQLite não funciona em Vercel (read-only filesystem)
             upload_to_supabase(vaga)
             sync_vaga_crm(vaga)
             total_novas += 1
