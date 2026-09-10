@@ -70,19 +70,24 @@ def run() -> int:
     print(f"[DEBUG] Total após filtros: {len(filtradas)}")
 
     total_novas = 0
+    erros = 0
     for vaga in filtradas:
         if not vaga.get("title") or not vaga.get("url"):
             continue
         if is_duplicate(vaga["title"], vaga.get("company", ""), vaga["url"]):
             continue
 
-        save_vaga(vaga)
-        upload_to_supabase(vaga)
-        sync_vaga_crm(vaga)
-        total_novas += 1
+        try:
+            save_vaga(vaga)
+            upload_to_supabase(vaga)
+            sync_vaga_crm(vaga)
+            total_novas += 1
+        except Exception as e:
+            print(f"[ERRO] Falha ao inserir vaga '{vaga.get('title', '?')[:50]}': {e}")
+            erros += 1
         time.sleep(0.15)
 
-    print(f"Novas vagas enviadas ao Discord: {total_novas}")
+    print(f"Novas vagas: {total_novas} | Erros: {erros}")
     print("=" * 50)
     return total_novas
 
