@@ -8,7 +8,7 @@ import requests
 import re
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
-SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
 
 # Keywords do ecossistema CRM/Growth/Marketing
 CRM_KEYWORDS = [

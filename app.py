@@ -112,7 +112,7 @@ def cleanup_vagas_fechadas():
     import os as _os
 
     SUPABASE_URL = _os.environ.get("SUPABASE_URL", "").rstrip("/")
-    SUPABASE_KEY = _os.environ.get("SUPABASE_ANON_KEY", "")
+    SUPABASE_KEY = _os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "") or _os.environ.get("SUPABASE_ANON_KEY", "")
     if not SUPABASE_URL or not SUPABASE_KEY:
         return 0
 
