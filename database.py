@@ -226,7 +226,8 @@ def upload_to_supabase(vaga: dict):
             timeout=10
         )
         if resp.status_code not in (201, 204):
-            print(f"[ERRO] Supabase HTTP {resp.status_code}: {resp.text[:300]}")
+            print(f"[ERRO] Supabase HTTP {resp.status_code}")
+            print(f"[ERRO] Response: {resp.text[:500]}")
         return resp.status_code in (201, 204)
     except Exception as e:
         print(f"[WARN] Erro ao salvar no Supabase: {e}")
