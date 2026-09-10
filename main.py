@@ -49,19 +49,25 @@ def run() -> int:
         try:
             for future in as_completed(futures, timeout=50):
                 all_vagas.extend(future.result())
-        except Exception:
-            print("[WARN] Timeout global — usando vagas coletadas até agora")
+        except Exception as e:
+            print(f"[WARN] Timeout global — {e}")
+
+    print(f"[DEBUG] Total coletado: {len(all_vagas)} vagas")
 
     # Filtra: localização válida por categoria + publicadas no período por categoria
     # CRM: 60 dias (populate inicial); demais: 30 dias
     def _days_for(vaga: dict) -> int:
         return 60 if vaga.get("category") in ("crm", "data", "po_pm", "qa") else 30
 
-    filtradas = [
-        v for v in all_vagas
-        if _passes_location_filter(v) and is_recent(v.get("published_at"), days=_days_for(v))
-    ]
-    print(f"Total coletado: {len(all_vagas)} | Após filtros (remoto + 30 dias): {len(filtradas)}")
+    # Debug filtros individuais
+    location_ok = [v for v in all_vagas if _passes_location_filter(v)]
+    print(f"[DEBUG] Após filtro localização: {len(location_ok)}")
+
+    recent_ok = [v for v in location_ok if is_recent(v.get("published_at"), days=_days_for(v))]
+    print(f"[DEBUG] Após filtro data: {len(recent_ok)}")
+
+    filtradas = recent_ok
+    print(f"[DEBUG] Total após filtros: {len(filtradas)}")
 
     total_novas = 0
     for vaga in filtradas:
