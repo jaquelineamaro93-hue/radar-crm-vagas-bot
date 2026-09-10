@@ -76,6 +76,10 @@ def run() -> int:
             continue
         if is_duplicate(vaga["title"], vaga.get("company", ""), vaga["url"]):
             continue
+        if is_vendas_vaga(vaga):
+            continue
+        if is_blacklisted(vaga):
+            continue
 
         try:
             save_vaga(vaga)
