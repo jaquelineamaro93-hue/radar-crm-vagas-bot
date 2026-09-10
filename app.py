@@ -14,6 +14,22 @@ def index():
     return jsonify({"status": "online", "service": "Bot de Vagas CX/CS & Design"})
 
 
+@app.route("/api/test-env", methods=["GET"])
+def test_env():
+    """Debug endpoint to verify environment variables are loaded"""
+    service_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+    anon_key = os.environ.get("SUPABASE_ANON_KEY", "")
+
+    return jsonify({
+        "service_key_present": bool(service_key),
+        "service_key_length": len(service_key) if service_key else 0,
+        "service_key_prefix": service_key[:20] + "..." if service_key else "NOT SET",
+        "anon_key_present": bool(anon_key),
+        "anon_key_length": len(anon_key) if anon_key else 0,
+        "supabase_url": os.environ.get("SUPABASE_URL", "NOT SET"),
+    })
+
+
 @app.route("/api/debug-raw", methods=["GET"])
 def debug_raw():
     import requests as req

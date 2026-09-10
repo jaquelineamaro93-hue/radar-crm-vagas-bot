@@ -202,11 +202,17 @@ def upload_to_supabase(vaga: dict):
     import os
 
     url = os.getenv("SUPABASE_URL", "").rstrip("/")
-    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
-    
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    anon_key = os.getenv("SUPABASE_ANON_KEY", "")
+    key = service_key or anon_key
+
     if not url or not key:
+        print(f"[ERRO] Supabase não configurado: URL={bool(url)}, KEY={bool(key)}")
         return False
-    
+
+    key_type = "SERVICE_ROLE" if service_key else "ANON"
+    print(f"[DEBUG] Usando {key_type} key para upload (comprimento: {len(key)})")
+
     try:
         resp = requests.post(
             f"{url}/rest/v1/vagas_scraper",
@@ -219,6 +225,8 @@ def upload_to_supabase(vaga: dict):
             json=vaga,
             timeout=10
         )
+        if resp.status_code not in (201, 204):
+            print(f"[ERRO] Supabase HTTP {resp.status_code}: {resp.text[:300]}")
         return resp.status_code in (201, 204)
     except Exception as e:
         print(f"[WARN] Erro ao salvar no Supabase: {e}")
