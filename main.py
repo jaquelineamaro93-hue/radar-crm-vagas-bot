@@ -90,7 +90,12 @@ def run() -> int:
             continue
 
         try:
-            # save_vaga(vaga)  # Removido: SQLite não funciona em Vercel (read-only filesystem)
+            try:
+                save_vaga(vaga)  # Deduplication (Redis/SQLite)
+            except Exception as e:
+                print(f"[WARN] Dedup falhou (ignorando): {e}")
+                # Continua mesmo se dedup falhar
+
             upload_to_supabase(vaga)
             sync_vaga_crm(vaga)
             total_novas += 1
