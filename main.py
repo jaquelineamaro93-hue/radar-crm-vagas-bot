@@ -47,7 +47,7 @@ def run() -> int:
     with ThreadPoolExecutor(max_workers=12) as executor:
         futures = {executor.submit(_safe_scrape, fn): fn.__module__ for fn in ALL_SCRAPERS}
         try:
-            for future in as_completed(futures, timeout=50):
+            for future in as_completed(futures, timeout=120):
                 all_vagas.extend(future.result())
         except Exception as e:
             print(f"[WARN] Timeout global — {e}")
