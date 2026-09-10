@@ -112,11 +112,24 @@ def scrape():
         return jsonify({"error": "Unauthorized"}), 401
 
     try:
+        print("=" * 60)
+        print("🤖 INICIANDO SCRAPE EM PRODUÇÃO...")
+        print("=" * 60)
+
         from main import run
         count = run()
         removidas = cleanup_vagas_fechadas()
+
+        print("=" * 60)
+        print(f"✅ SCRAPE COMPLETO: {count} vagas novas adicionadas")
+        print(f"🗑️  {removidas} vagas fechadas removidas")
+        print("=" * 60)
+
         return jsonify({"status": "ok", "novas_vagas": count, "vagas_removidas": removidas})
     except Exception as e:
+        print(f"❌ ERRO NO SCRAPE: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
