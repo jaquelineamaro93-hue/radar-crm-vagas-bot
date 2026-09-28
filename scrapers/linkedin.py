@@ -4,6 +4,7 @@ Scraper para LinkedIn Jobs (busca pública, sem login).
 import time
 import requests
 from .base import classify, relative_to_iso
+from config import CXCS_SEARCH_TERMS
 
 SOURCE = "LinkedIn"
 
@@ -246,6 +247,15 @@ SEARCHES = [
     ("loyalty crm", "Brazil", "2", "r5184000"),
     ("fidelizacao clientes", "Brazil", "2", "r5184000"),
 ]
+
+# Busca adicional de CX/Customer Service sem restringir o modelo de trabalho.
+# Mantemos termos amplos para cobrir as variações completas reconhecidas em config.py.
+_existing_search_terms = {item[0].casefold() for item in SEARCHES}
+SEARCHES.extend(
+    (term, "Brazil", "", "r5184000")
+    for term in CXCS_SEARCH_TERMS
+    if term.casefold() not in _existing_search_terms
+)
 
 BASE_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 
