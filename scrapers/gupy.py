@@ -19,8 +19,8 @@ def scrape() -> list[dict]:
         "Accept": "application/json",
     })
 
-    from config import KEYWORDS
-    searches = KEYWORDS.get("crm", [])
+    from config import KEYWORDS, CXCS_SEARCH_TERMS
+    searches = list(dict.fromkeys(KEYWORDS.get("crm", []) + CXCS_SEARCH_TERMS))
 
     for query in searches:
         try:
