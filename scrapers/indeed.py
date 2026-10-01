@@ -15,6 +15,7 @@ import time
 import requests
 from datetime import datetime, timezone
 from .base import classify
+from config import CXCS_SEARCH_TERMS
 
 SOURCE = "Indeed"
 BASE_URL = "https://br.indeed.com"
@@ -45,6 +46,14 @@ SEARCHES = [
     ("lifecycle marketing",          30),
     ("jornada do cliente",           30),
 ]
+
+# Termos CX/CS executados primeiro; o Indeed continua filtrando localização
+# no resultado para manter o comportamento atual do scraper.
+_existing_indeed = {q.casefold() for q, _ in SEARCHES}
+SEARCHES = [
+    (term, 30) for term in CXCS_SEARCH_TERMS
+    if term.casefold() not in _existing_indeed
+] + SEARCHES
 
 _REMOTE_WORDS = {"remoto", "remote", "home office", "trabalho remoto"}
 # Respostas menores que esse tamanho são CAPTCHA / página de bloqueio
