@@ -7,7 +7,7 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from .base import classify
+from .base import classify\nfrom config import CXCS_SEARCH_TERMS
 
 _AUTOMATION_CATS = {"automacao_presencial", "automacao_remote"}
 SOURCE = "InfoJobs"
