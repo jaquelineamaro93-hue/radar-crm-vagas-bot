@@ -38,10 +38,18 @@ def _url_hash(url: str) -> str:
 
 
 def _matches_crm_ecosystem(vaga: dict) -> bool:
-    """Verifica se a vaga pertence ao ecossistema de CRM/Growth/Marketing."""
+    """Vagas que devem aparecer no dashboard da comunidade."""
+    category = (vaga.get("category") or "").strip().lower()
+
+    # O dashboard usa vagas_crm como tabela de exibição. CX/CS é uma
+    # categoria oficial do bot e não pode depender de conter "crm",
+    # "marketing" ou outra keyword histórica para ser sincronizada.
+    if category in {"crm", "cxcs"}:
+        return True
+
     text_to_search = " ".join([
         vaga.get("title", ""),
-        vaga.get("category", ""),
+        category,
         vaga.get("description", ""),
     ]).lower()
 
@@ -67,6 +75,7 @@ def sync_vaga_crm(vaga: dict):
         "description": (vaga.get("description") or "")[:2000],
         "source": (vaga.get("source") or "")[:100],
         "published_at": vaga.get("published_at"),
+        "category": vaga.get("category"),
         "url_hash": _url_hash(vaga["url"]),
     }
 
