@@ -1234,19 +1234,162 @@ NEW_CXCS_TITLES = [
 # Termos amplos usados pelos scrapers para descobrir vagas sem transformar
 # cada variação de título em uma requisição separada.
 CXCS_SEARCH_TERMS = [
-    "customer success", "customer success manager", "customer experience",
-    "customer service", "sucesso do cliente", "analista de sucesso do cliente",
-    "analista de relacionamento", "analista de atendimento", "atendimento ao cliente",
-    "suporte ao cliente", "customer support", "onboarding specialist",
-    "cs strategy operations", "customer engagement", "client success",
-    "client solutions manager", "coordenador de customer success",
-    "gerente de customer success", "head de customer success",
-    "especialista de customer experience", "especialista de customer success",
-    "jornada do cliente", "nps", "retenção", "implantação"
+    # Núcleo CS / CX
+    "customer success",
+    "customer success manager",
+    "customer success analyst",
+    "customer success specialist",
+    "customer success operations",
+    "customer success ops",
+    "customer success strategy",
+    "customer experience",
+    "customer experience analyst",
+    "customer experience specialist",
+    "customer experience manager",
+    "customer service",
+    "customer support",
+    "customer care",
+    "customer happiness",
+    "client success",
+    "client solutions",
+    "sucesso do cliente",
+    "analista de sucesso do cliente",
+    "experiência do cliente",
+    "experiencia do cliente",
+
+    # Atendimento / relacionamento
+    "atendimento ao cliente",
+    "analista de atendimento",
+    "assistente de atendimento",
+    "supervisor de atendimento",
+    "coordenador de atendimento",
+    "gerente de atendimento",
+    "relacionamento com cliente",
+    "analista de relacionamento",
+    "consultor de relacionamento",
+    "executivo de relacionamento",
+    "suporte ao cliente",
+    "service desk",
+    "sac",
+    "ouvidoria",
+    "reclame aqui",
+
+    # Jornada / retenção / onboarding
+    "onboarding",
+    "customer onboarding",
+    "implantação",
+    "implantacao",
+    "implementação",
+    "implementacao",
+    "retenção",
+    "retencao",
+    "customer retention",
+    "engajamento",
+    "customer engagement",
+    "jornada do cliente",
+    "customer journey",
+    "nps",
+    "health score",
+    "adoção",
+    "adocao",
+    "pós-vendas",
+    "pos-vendas",
+    "key account",
+
+    # Operações / estratégia / insights
+    "cs ops",
+    "success ops",
+    "cs strategy operations",
+    "customer operations",
+    "customer strategy",
+    "customer insights",
+    "consumer insights",
+    "customer intelligence",
+    "customer analytics",
+    "cx analytics",
+    "inteligência de mercado",
+    "inteligencia de mercado",
 ]
 
+# Termos que devem ganhar prioridade de classificação como CX/CS quando
+# aparecem NO TÍTULO. Isso evita que títulos de CX caiam em "crm" apenas
+# porque a lista de CRM também contém termos como customer experience/NPS.
+CXCS_PRIORITY_TERMS = [
+    "customer success",
+    "customer experience",
+    "customer service",
+    "customer support",
+    "customer care",
+    "customer happiness",
+    "client success",
+    "sucesso do cliente",
+    "experiência do cliente",
+    "experiencia do cliente",
+    "atendimento ao cliente",
+    "suporte ao cliente",
+    "relacionamento com cliente",
+    "relacionamento com o cliente",
+    "customer onboarding",
+    "customer engagement",
+    "customer journey",
+    "jornada do cliente",
+    "cs ops",
+    "success ops",
+    "cs strategy",
+    "ouvidoria",
+    "reclame aqui",
+    "service desk",
+    "consumer insights",
+    "customer insights",
+    "customer intelligence",
+    "customer analytics",
+    "cx analytics",
+]
+
+# Títulos adjacentes enviados em 01/10 que não estavam no lote anterior.
+# Mantemos como títulos exatos para não transformar termos genéricos como
+# "operações" ou "inteligência de mercado" em regra ampla de classificação.
+CXCS_EXTRA_TITLES_20261001 = [
+    "Analista de Customer Service Pleno",
+    "Analista Customer Service",
+    "ANALISTA DE CUSTOMER SERVICE",
+    "Coordenador(a) de Customer Service - São Paulo",
+    "Analista de CS Ops Pleno",
+    "Analista de Operações Pleno",
+    "Analista de Consumer Market Insights Sênior (CMI)",
+    "Analista de Inteligência de Mercado Pleno",
+    "Analista de Performance e Inteligência de Mercado",
+    "Analista de Pesquisa e Inteligência de Mercado",
+    "Analista de Consumer Insights",
+    "Analista de Inteligência de Mercado e Pesquisa",
+    "Analista de Insights Pleno",
+    "ANALISTA CUSTOMER EXPERIENCE E INSIGHTS SR",
+    "Analista de CX e Insights Júnior | Insights",
+    "Analista de Customer Experience Sr (Foco em Dados)",
+    "Analista de Experiência do Cliente III (BPO)",
+    "Analista de Produtos Senior - Customer Success especialista em Plataforma",
+    "Analista de Estratégia do Cliente SR",
+    "Analista de NPS (Customer Success)",
+    "Analista de Qualidade na Experiência do Cliente & Onboarding",
+    "Analista Sênior de Processos e Automação",
+    "Customer Experience Analytics SR Analyst",
+    "Especialista em Consumer Insights | Pesquisa de Clientes & Mercado",
+    "Especialista de Estratégia do Cliente",
+    "Especialista de Inteligência Comercial - Petz Holding",
+    "Customer Engagement Client Manager",
+    "EXECUTIVO DE SERVIÇO AO CLIENTE",
+    "Pessoa Executiva de Relacionamento com Clientes",
+    "Coordenador de Eficiência e Soluções",
+    "Customer Success Manager- Marketing Cloud",
+    "Sr. CS Strategy & Operations Analyst",
+]
+
+
+
 KEYWORDS["cxcs"] = list(dict.fromkeys(
-    KEYWORDS.get("cxcs", []) + [title.casefold() for title in NEW_CXCS_TITLES]
+    KEYWORDS.get("cxcs", [])
+    + [title.casefold() for title in NEW_CXCS_TITLES]
+    + [title.casefold() for title in CXCS_EXTRA_TITLES_20261001]
 ))
 
 HEADERS = {

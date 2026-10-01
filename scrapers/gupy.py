@@ -20,7 +20,9 @@ def scrape() -> list[dict]:
     })
 
     from config import KEYWORDS, CXCS_SEARCH_TERMS
-    searches = list(dict.fromkeys(KEYWORDS.get("crm", []) + CXCS_SEARCH_TERMS))
+    # CX/CS vem primeiro para não ficar no fim de centenas de buscas de CRM
+    # e acabar cortado pelo timeout global do job.
+    searches = list(dict.fromkeys(CXCS_SEARCH_TERMS + KEYWORDS.get("crm", [])))
 
     for query in searches:
         try:

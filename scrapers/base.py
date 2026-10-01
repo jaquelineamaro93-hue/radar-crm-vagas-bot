@@ -3,7 +3,10 @@ import time
 import requests
 from datetime import datetime, timezone, timedelta
 from bs4 import BeautifulSoup
-from config import HEADERS, REQUEST_TIMEOUT, REQUEST_DELAY, KEYWORDS
+from config import (
+    HEADERS, REQUEST_TIMEOUT, REQUEST_DELAY, KEYWORDS,
+    CXCS_PRIORITY_TERMS, NEW_CXCS_TITLES, CXCS_EXTRA_TITLES_20261001,
+)
 
 
 def fetch(url: str, session: requests.Session = None, extra_headers: dict = None) -> BeautifulSoup | None:
@@ -19,12 +22,38 @@ def fetch(url: str, session: requests.Session = None, extra_headers: dict = None
         return None
 
 
+def _contains_term(text: str, term: str) -> bool:
+    pattern = r"\b" + re.escape(term.casefold()) + r"\b"
+    return bool(re.search(pattern, text.casefold()))
+
+
+_CXCS_EXACT_TITLES = tuple(
+    dict.fromkeys(
+        title.casefold()
+        for title in (NEW_CXCS_TITLES + CXCS_EXTRA_TITLES_20261001)
+    )
+)
+
+
 def classify(title: str, description: str = "") -> str | None:
-    text = (title + " " + description).lower()
+    title_cf = (title or "").casefold()
+    text = ((title or "") + " " + (description or "")).casefold()
+
+    # CX/CS precisa ser resolvido antes de CRM. A lista de CRM tem termos
+    # sobrepostos (ex.: customer experience, NPS e customer success manager),
+    # então o loop genérico fazia vagas de CX/CS caírem na categoria "crm".
+    # Títulos exatos enviados pela comunidade têm prioridade máxima.
+    if any(exact and exact in title_cf for exact in _CXCS_EXACT_TITLES):
+        return "cxcs"
+
+    # Depois priorizamos apenas sinais fortes no TÍTULO, evitando classificar
+    # uma vaga de outra área como CX só porque a descrição menciona NPS/CS.
+    if any(_contains_term(title_cf, term) for term in CXCS_PRIORITY_TERMS):
+        return "cxcs"
+
     for category, keywords in KEYWORDS.items():
         for kw in keywords:
-            pattern = r"\b" + re.escape(kw.lower()) + r"\b"
-            if re.search(pattern, text):
+            if _contains_term(text, kw):
                 return category
     return None
 

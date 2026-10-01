@@ -15,6 +15,7 @@ import time
 import requests
 from datetime import datetime, timezone
 from .base import classify
+from config import CXCS_SEARCH_TERMS
 
 SOURCE = "Indeed"
 BASE_URL = "https://br.indeed.com"
@@ -44,6 +45,16 @@ SEARCHES = [
     ("klaviyo",                      30),
     ("lifecycle marketing",          30),
     ("jornada do cliente",           30),
+]
+
+# Termos CX/CS executados primeiro; o Indeed continua filtrando localização
+# no resultado para manter o comportamento atual do scraper.
+_cxcs_indeed_set = {term.casefold() for term in CXCS_SEARCH_TERMS}
+SEARCHES = [
+    (term, 30) for term in CXCS_SEARCH_TERMS
+] + [
+    item for item in SEARCHES
+    if item[0].casefold() not in _cxcs_indeed_set
 ]
 
 _REMOTE_WORDS = {"remoto", "remote", "home office", "trabalho remoto"}
