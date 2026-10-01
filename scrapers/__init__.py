@@ -5,6 +5,7 @@ from .catho import scrape as scrape_catho
 from .vagascom import scrape as scrape_vagascom
 from .jobs99 import scrape as scrape_jobs99
 from .solides import scrape as scrape_solides
+from .indeed import scrape as scrape_indeed
 
 ALL_SCRAPERS = [
     scrape_linkedin,
@@ -14,4 +15,5 @@ ALL_SCRAPERS = [
     scrape_vagascom,
     scrape_jobs99,
     scrape_solides,
+    scrape_indeed,
 ]
