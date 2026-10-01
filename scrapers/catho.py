@@ -4,6 +4,7 @@ Scraper para Catho.com.br — focado em CRM.
 import requests
 from bs4 import BeautifulSoup
 from .base import classify
+from config import CXCS_SEARCH_TERMS
 
 SOURCE = "Catho"
 BASE_URL = "https://www.catho.com.br"
@@ -194,6 +195,10 @@ SEARCHES = [
     "marketing-automation", "analista-de-campanhas",
     "braze", "klaviyo", "pipedrive",
 ]
+
+# Busca CX/CS primeiro para aumentar recall antes da lista extensa de CRM.
+_cxcs_slugs = [term.casefold().replace(" ", "-") for term in CXCS_SEARCH_TERMS]
+SEARCHES = list(dict.fromkeys(_cxcs_slugs + SEARCHES))
 
 def scrape() -> list[dict]:
     vagas = []
