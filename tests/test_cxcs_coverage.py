@@ -3,6 +3,7 @@ import unittest
 from scrapers.base import classify
 from config import CXCS_SEARCH_TERMS
 from scrapers import linkedin, catho, indeed
+from supabase_sync import _matches_crm_ecosystem
 
 
 class CxCsCoverageTests(unittest.TestCase):
@@ -25,6 +26,13 @@ class CxCsCoverageTests(unittest.TestCase):
     def test_crm_stays_crm(self):
         self.assertEqual(classify("Analista de CRM"), "crm")
         self.assertEqual(classify("Salesforce Marketing Cloud Specialist"), "crm")
+
+    def test_cxcs_is_synced_to_dashboard(self):
+        self.assertTrue(_matches_crm_ecosystem({
+            "title": "Analista de Sucesso do Cliente",
+            "category": "cxcs",
+            "description": "",
+        }))
 
     def test_cx_searches_run_first(self):
         first_linkedin = [item[0] for item in linkedin.SEARCHES[: len(CXCS_SEARCH_TERMS)]]
