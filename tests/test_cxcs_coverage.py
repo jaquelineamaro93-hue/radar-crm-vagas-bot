@@ -2,7 +2,7 @@ import unittest
 
 from scrapers.base import classify
 from config import CXCS_SEARCH_TERMS
-from scrapers import linkedin, catho, indeed
+from scrapers import linkedin, catho, indeed, vagascom, infojobs
 from supabase_sync import _matches_crm_ecosystem
 
 
@@ -44,6 +44,20 @@ class CxCsCoverageTests(unittest.TestCase):
 
         first_indeed = [item[0] for item in indeed.SEARCHES[: len(CXCS_SEARCH_TERMS)]]
         self.assertEqual(first_indeed, CXCS_SEARCH_TERMS)
+
+        first_vagas = vagascom.SEARCHES[: len(CXCS_SEARCH_TERMS)]
+        expected_vagas = [
+            "vagas-de-" + term.casefold().replace(" ", "-")
+            for term in CXCS_SEARCH_TERMS
+        ]
+        self.assertEqual(first_vagas, expected_vagas)
+
+        first_infojobs = [item[0] for item in infojobs.SEARCHES[: len(CXCS_SEARCH_TERMS)]]
+        expected_infojobs = [
+            "vagas-de-emprego-" + term.casefold().replace(" ", "-") + "-trabalho-home-office"
+            for term in CXCS_SEARCH_TERMS
+        ]
+        self.assertEqual(first_infojobs, expected_infojobs)
 
 
 if __name__ == "__main__":

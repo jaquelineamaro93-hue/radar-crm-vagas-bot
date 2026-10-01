@@ -4,7 +4,7 @@ Usa o atributo title= do link para pegar o título correto.
 """
 import requests
 from bs4 import BeautifulSoup
-from .base import classify
+from .base import classify\nfrom config import CXCS_SEARCH_TERMS
 
 SOURCE = "Vagas.com"
 BASE_URL = "https://www.vagas.com.br"
