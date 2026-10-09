@@ -35,6 +35,30 @@ _CXCS_EXACT_TITLES = tuple(
 )
 
 
+import unicodedata
+
+_PRODUCT_DESIGN_TITLE_RE = re.compile(
+    r"\b(?:"
+    r"(?:product|ux|ui|ux ui|ui ux|user experience|user interface|service|interaction) design(?:ers?)?"
+    r"|design(?:er)? de produto"
+    r"|design(?:er)? de servicos"
+    r"|design(?:er)? de interacao"
+    r"|designer de experiencia do usuario"
+    r"|ux researchers?"
+    r"|pesquisador(?:a)? de ux"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+def is_product_design_title(title: str) -> bool:
+    """Reconhece cargos de Product Design / UX / UI pelo titulo, nao por descricao."""
+    folded = unicodedata.normalize("NFKD", title or "")
+    folded = "".join(char for char in folded if not unicodedata.combining(char))
+    normalized = re.sub(r"[^a-z0-9]+", " ", folded.casefold()).strip()
+    return bool(_PRODUCT_DESIGN_TITLE_RE.search(normalized))
+
+
 def classify(title: str, description: str = "") -> str | None:
     title_cf = (title or "").casefold()
     text = ((title or "") + " " + (description or "")).casefold()
@@ -50,6 +74,10 @@ def classify(title: str, description: str = "") -> str | None:
     # uma vaga de outra área como CX só porque a descrição menciona NPS/CS.
     if any(_contains_term(title_cf, term) for term in CXCS_PRIORITY_TERMS):
         return "cxcs"
+
+    # Product Design nao deve cair em CRM/PO-PM por palavras como product/lead.
+    if is_product_design_title(title):
+        return "designer"
 
     for category, keywords in KEYWORDS.items():
         for kw in keywords:
