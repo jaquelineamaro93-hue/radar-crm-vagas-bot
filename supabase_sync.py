@@ -6,6 +6,7 @@ import hashlib
 import os
 import requests
 import re
+from scrapers.base import is_product_design_title
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "") or os.getenv("SUPABASE_ANON_KEY", "")
@@ -45,6 +46,10 @@ def _matches_crm_ecosystem(vaga: dict) -> bool:
     # categoria oficial do bot e não pode depender de conter "crm",
     # "marketing" ou outra keyword histórica para ser sincronizada.
     if category in {"crm", "cxcs"}:
+        return True
+
+    # Publicar vagas de Product Design, UX/UI e pesquisa sem incluir todo design grafico.
+    if category == "designer" and is_product_design_title(vaga.get("title", "")):
         return True
 
     text_to_search = " ".join([

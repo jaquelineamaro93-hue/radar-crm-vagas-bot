@@ -104,6 +104,21 @@ def debug():
 
 
 
+@app.route("/api/scrape-product-design", methods=["GET"])
+def scrape_product_design():
+    secret = os.environ.get("CRON_SECRET", "")
+    if not secret or request.headers.get("Authorization", "") != f"Bearer {secret}":
+        return jsonify({"error": "Unauthorized"}), 401
+    try:
+        from main import run
+        from scrapers.product_design import scrape as design_scrape
+        count = run(scrapers=[design_scrape])
+        return jsonify({"status": "ok", "novas_vagas": count})
+    except Exception:
+        app.logger.exception("Falha na coleta de Product Design")
+        return jsonify({"error": "Falha interna"}), 500
+
+
 @app.route("/api/scrape", methods=["GET"])
 def scrape():
     cron_secret = os.environ.get("CRON_SECRET", "")
