@@ -9,7 +9,7 @@ from database import init_db, is_duplicate, save_vaga, upload_to_supabase, is_ve
 # Notifier removido
 from supabase_sync import sync_vaga_crm
 from scrapers import ALL_SCRAPERS
-from scrapers.base import is_recent
+from scrapers.base import is_recent, is_product_design_title
 
 # Palavras que indicam vaga presencial — descarta para categorias remotas
 _PRESENCIAL = {"presencial", "on-site", "onsite", "in-office", "híbrido", "hibrido", "hybrid"}
@@ -34,10 +34,13 @@ def _passes_location_filter(vaga: dict) -> bool:
     # Ed. Física: aceita remoto OU presencial em São Paulo
     if cat == "edfis":
         return _is_remote(vaga) or _is_sao_paulo(vaga)
+    # Product Design: incluir remoto, hibrido e presencial no Brasil.
+    if cat == "designer" and is_product_design_title(vaga.get("title", "")):
+        return True
     return _is_remote(vaga)
 
 
-def run() -> int:
+def run(scrapers: list | None = None) -> int:
     print("=" * 50)
     print("Iniciando coleta de vagas...")
 
@@ -53,7 +56,7 @@ def run() -> int:
 
     all_vagas: list[dict] = []
     with ThreadPoolExecutor(max_workers=12) as executor:
-        futures = {executor.submit(_safe_scrape, fn): fn.__module__ for fn in ALL_SCRAPERS}
+        futures = {executor.submit(_safe_scrape, fn): fn.__module__ for fn in (scrapers if scrapers is not None else ALL_SCRAPERS)}
         try:
             for future in as_completed(futures, timeout=120):
                 all_vagas.extend(future.result())
