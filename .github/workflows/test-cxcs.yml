@@ -1,4 +1,4 @@
-name: Test CX CS coverage
+name: Test bot integrity and CX CS coverage
 
 on:
   pull_request:

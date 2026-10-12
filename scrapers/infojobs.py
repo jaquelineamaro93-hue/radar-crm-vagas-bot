@@ -7,7 +7,8 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timezone
-from .base import classify\nfrom config import CXCS_SEARCH_TERMS
+from .base import classify
+from config import CXCS_SEARCH_TERMS
 
 _AUTOMATION_CATS = {"automacao_presencial", "automacao_remote"}
 SOURCE = "InfoJobs"
@@ -228,6 +229,11 @@ SEARCHES = [
     ("vagas-de-emprego-braze-trabalho-home-office",                     True, None),
     ("vagas-de-emprego-klaviyo-trabalho-home-office",                   True, None),
 ]
+
+# CX/CS has priority; preserve every existing search and avoid duplicates.
+_cxcs_first = [("vagas-de-emprego-" + term.casefold().replace(" ", "-") + "-trabalho-home-office", True, None) for term in CXCS_SEARCH_TERMS]
+SEARCHES = _cxcs_first + [item for item in SEARCHES if item not in _cxcs_first]
+
 
 
 def _parse_date(raw: str) -> str | None:
