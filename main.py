@@ -4,7 +4,7 @@ Roda os scrapers em paralelo para caber no timeout de 60s do Vercel.
 """
 import re
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait
 from database import init_db, is_duplicate, save_vaga, upload_to_supabase, is_vendas_vaga, is_blacklisted
 # Notifier removido
 from supabase_sync import sync_vaga_crm
@@ -54,14 +54,22 @@ def run(scrapers: list | None = None) -> int:
 
     init_db()
 
+    # Vercel Hobby functions have a bounded execution window. Never wait
+    # 120s for scrapers before beginning database writes.
     all_vagas: list[dict] = []
-    with ThreadPoolExecutor(max_workers=12) as executor:
-        futures = {executor.submit(_safe_scrape, fn): fn.__module__ for fn in (scrapers if scrapers is not None else ALL_SCRAPERS)}
-        try:
-            for future in as_completed(futures, timeout=120):
+    executor = ThreadPoolExecutor(max_workers=12)
+    try:
+        futures = {executor.submit(_safe_scrape, fn): fn.__module__
+                   for fn in (scrapers if scrapers is not None else ALL_SCRAPERS)}
+        completed, pending = wait(futures, timeout=25)
+        for future in completed:
+            try:
                 all_vagas.extend(future.result())
-        except Exception as e:
-            print(f"[WARN] Timeout global — {e}")
+            except Exception as e:
+                print(f"[WARN] Fonte indisponivel: {e}")
+        print(f"[INFO] Fontes concluidas: {len(completed)}/{len(futures)}; pendentes: {len(pending)}")
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
 
     print(f"[DEBUG] Total coletado: {len(all_vagas)} vagas")
 
@@ -80,32 +88,45 @@ def run(scrapers: list | None = None) -> int:
     filtradas = recent_ok
     print(f"[DEBUG] Total após filtros: {len(filtradas)}")
 
-    total_novas = 0
-    erros = 0
+    # Keep a bounded workload, interleaving categories so none is preferred.
+    from collections import defaultdict, deque
+    groups = defaultdict(deque)
+    seen_urls = set()
     for vaga in filtradas:
         if not vaga.get("title") or not vaga.get("url"):
             continue
-        if is_duplicate(vaga["title"], vaga.get("company", ""), vaga["url"]):
+        if is_vendas_vaga(vaga) or is_blacklisted(vaga):
             continue
-        if is_vendas_vaga(vaga):
+        if vaga["url"] in seen_urls:
             continue
-        if is_blacklisted(vaga):
-            continue
+        seen_urls.add(vaga["url"])
+        groups[vaga.get("category") or "outros"].append(vaga)
+    queue = []
+    while any(groups.values()) and len(queue) < 100:
+        for category in sorted(groups):
+            if groups[category] and len(queue) < 100:
+                queue.append(groups[category].popleft())
 
-        try:
+    def persist(vaga):
+        # Upsert into the public catalog even if the job is already in the
+        # local dedup cache; this updates last_seen_at without deleting history.
+        sync_vaga_crm(vaga)
+        if not is_duplicate(vaga["title"], vaga.get("company", ""), vaga["url"]):
+            if upload_to_supabase(vaga):
+                save_vaga(vaga)
+        return True
+
+    total_novas = 0
+    erros = 0
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        jobs = [pool.submit(persist, vaga) for vaga in queue]
+        for future in jobs:
             try:
-                save_vaga(vaga)  # Deduplication (Redis/SQLite)
+                total_novas += int(future.result())
             except Exception as e:
-                print(f"[WARN] Dedup falhou (ignorando): {e}")
-                # Continua mesmo se dedup falhar
-
-            upload_to_supabase(vaga)
-            sync_vaga_crm(vaga)
-            total_novas += 1
-        except Exception as e:
-            print(f"[ERRO] Falha ao inserir vaga '{vaga.get('title', '?')[:50]}': {e}")
-            erros += 1
-        time.sleep(0.15)
+                print(f"[ERRO] Falha ao sincronizar vaga: {e}")
+                erros += 1
+    print(f"[INFO] Processadas {len(queue)} vagas de {len(groups)} categorias")
 
     print(f"Novas vagas: {total_novas} | Erros: {erros}")
     print("=" * 50)
