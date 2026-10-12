@@ -248,18 +248,13 @@ SEARCHES = [
     ("fidelizacao clientes", "Brazil", "2", "r5184000"),
 ]
 
-# CX/Customer Service precisa vir ANTES da longa lista histórica de CRM.
-# Assim as buscas de CX/CS não ficam para o final e não são perdidas quando
-# o ambiente serverless encerra o job por timeout.
-_cxcs_term_set = {term.casefold() for term in CXCS_SEARCH_TERMS}
-_cxcs_first = [
+# Inclui todos os termos solicitados, sem promover uma categoria acima das demais.
+_existing_terms = {item[0].casefold() for item in SEARCHES}
+SEARCHES.extend(
     (term, "Brazil", "", "r5184000")
     for term in CXCS_SEARCH_TERMS
-]
-SEARCHES = _cxcs_first + [
-    item for item in SEARCHES
-    if item[0].casefold() not in _cxcs_term_set
-]
+    if term.casefold() not in _existing_terms
+)
 
 BASE_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 
