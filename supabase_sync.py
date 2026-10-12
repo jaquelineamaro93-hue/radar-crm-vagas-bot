@@ -103,5 +103,7 @@ def sync_vaga_crm(vaga: dict):
         )
         if not resp.ok:
             print(f"[WARN] Supabase sync HTTP {resp.status_code}: {resp.text[:200]}")
+        return resp.ok
     except requests.RequestException as e:
         print(f"[WARN] Supabase sync falhou: {e}")
+        return False
