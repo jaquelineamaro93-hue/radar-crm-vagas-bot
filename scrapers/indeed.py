@@ -47,15 +47,12 @@ SEARCHES = [
     ("jornada do cliente",           30),
 ]
 
-# Termos CX/CS executados primeiro; o Indeed continua filtrando localização
-# no resultado para manter o comportamento atual do scraper.
-_cxcs_indeed_set = {term.casefold() for term in CXCS_SEARCH_TERMS}
-SEARCHES = [
+# Mantem todas as categorias; inclui termos ainda ausentes sem priorizacao.
+_existing_terms = {item[0].casefold() for item in SEARCHES}
+SEARCHES.extend(
     (term, 30) for term in CXCS_SEARCH_TERMS
-] + [
-    item for item in SEARCHES
-    if item[0].casefold() not in _cxcs_indeed_set
-]
+    if term.casefold() not in _existing_terms
+)
 
 _REMOTE_WORDS = {"remoto", "remote", "home office", "trabalho remoto"}
 # Respostas menores que esse tamanho são CAPTCHA / página de bloqueio
