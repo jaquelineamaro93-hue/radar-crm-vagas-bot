@@ -27,7 +27,7 @@ UPSTASH_REDIS_REST_URL = _env("UPSTASH_REDIS_REST_URL")
 UPSTASH_REDIS_REST_TOKEN = _env("UPSTASH_REDIS_REST_TOKEN")
 
 # Fallback local: SQLite (usado quando não há Redis configurado)
-DB_PATH = os.getenv("DB_PATH", "vagas.db")
+DB_PATH = os.getenv("DB_PATH", "/tmp/conexaocrm-vagas.db" if os.getenv("VERCEL") else "vagas.db")
 
 # Palavras-chave por categoria — filtro aplicado no título + descrição
 KEYWORDS = {
