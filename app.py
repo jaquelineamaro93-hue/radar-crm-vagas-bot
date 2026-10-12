@@ -113,7 +113,16 @@ def scrape_product_design():
         from main import run
         from scrapers.product_design import scrape as design_scrape
         count = run(scrapers=[design_scrape])
-        return jsonify({"status": "ok", "novas_vagas": count})
+        # Existing 10:00 UTC cron also verifies a bounded batch of old links.
+        # Failures here must never roll back or block new job ingestion.
+        try:
+            from job_availability import check_closed_jobs
+            availability = check_closed_jobs()
+        except Exception:
+            app.logger.exception("Falha na verificacao nao destrutiva de vagas")
+            availability = {"checked": 0, "error": "verification_unavailable"}
+        return jsonify({"status": "ok", "novas_vagas": count,
+                        "verificacao_disponibilidade": availability})
     except Exception:
         app.logger.exception("Falha na coleta de Product Design")
         return jsonify({"error": "Falha interna"}), 500

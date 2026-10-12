@@ -15,4 +15,4 @@ jobs:
         with:
           python-version: "3.12"
       - name: Check scraper syntax
-        run: python -m py_compile app.py main.py database.py supabase_sync.py scrapers/*.py
+        run: python -m py_compile app.py main.py database.py supabase_sync.py job_availability.py scrapers/*.py
