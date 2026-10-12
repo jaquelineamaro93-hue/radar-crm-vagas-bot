@@ -110,11 +110,11 @@ def run(scrapers: list | None = None) -> int:
     def persist(vaga):
         # Upsert into the public catalog even if the job is already in the
         # local dedup cache; this updates last_seen_at without deleting history.
-        sync_vaga_crm(vaga)
+        synced = sync_vaga_crm(vaga)
         if not is_duplicate(vaga["title"], vaga.get("company", ""), vaga["url"]):
             if upload_to_supabase(vaga):
                 save_vaga(vaga)
-        return True
+        return bool(synced)
 
     total_novas = 0
     erros = 0
