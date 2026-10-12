@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/scrape",
-      "schedule": "0 9 * * *"
+      "schedule": "5 19 * * *"
     },
     {
       "path": "/api/scrape-product-design",
