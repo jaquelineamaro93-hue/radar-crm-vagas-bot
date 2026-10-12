@@ -93,6 +93,8 @@ def scrape_product_design():
     secret = os.environ.get("CRON_SECRET", "")
     if not secret or request.headers.get("Authorization", "") != f"Bearer {secret}":
         return jsonify({"error": "Unauthorized"}), 401
+    from cron_history import begin, finish
+    run_id = begin("radar_crm_product_design")
     try:
         from main import run
         from scrapers.product_design import scrape as design_scrape
@@ -105,11 +107,13 @@ def scrape_product_design():
         except Exception:
             app.logger.exception("Falha na verificacao nao destrutiva de vagas")
             availability = {"checked": 0, "error": "verification_unavailable"}
-        return jsonify({"status": "ok", "novas_vagas": count,
-                        "verificacao_disponibilidade": availability})
+        finish(run_id, True, count=count, details={"availability": availability})
+        return jsonify({"status": "ok", "vagas_sincronizadas": count,
+                        "verificacao_disponibilidade": availability, "run_id": run_id})
     except Exception:
         app.logger.exception("Falha na coleta de Product Design")
-        return jsonify({"error": "Falha interna"}), 500
+        finish(run_id, False, error="Falha na coleta de Product Design")
+        return jsonify({"error": "Falha interna", "run_id": run_id}), 500
 
 
 @app.route("/api/scrape", methods=["GET"])
@@ -119,6 +123,8 @@ def scrape():
     if not cron_secret or auth != f"Bearer {cron_secret}":
         return jsonify({"error": "Unauthorized"}), 401
 
+    from cron_history import begin, finish
+    run_id = begin("radar_crm_full")
     try:
         print("=" * 60)
         print("🤖 INICIANDO SCRAPE EM PRODUÇÃO...")
@@ -133,12 +139,14 @@ def scrape():
         print(f"🗑️  {removidas} vagas fechadas removidas")
         print("=" * 60)
 
-        return jsonify({"status": "ok", "novas_vagas": count, "vagas_removidas": removidas})
+        finish(run_id, True, count=count)
+        return jsonify({"status": "ok", "vagas_sincronizadas": count, "vagas_removidas": removidas, "run_id": run_id})
     except Exception as e:
         print(f"❌ ERRO NO SCRAPE: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({"status": "error", "message": str(e)}), 500
+        finish(run_id, False, error=type(e).__name__ + ": " + str(e))
+        return jsonify({"status": "error", "message": "Falha interna na coleta", "run_id": run_id}), 500
 
 
 
