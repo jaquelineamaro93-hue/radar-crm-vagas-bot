@@ -196,9 +196,10 @@ SEARCHES = [
     "braze", "klaviyo", "pipedrive",
 ]
 
-# Busca CX/CS primeiro para aumentar recall antes da lista extensa de CRM.
-_cxcs_slugs = [term.casefold().replace(" ", "-") for term in CXCS_SEARCH_TERMS]
-SEARCHES = list(dict.fromkeys(_cxcs_slugs + SEARCHES))
+# Mantem as buscas existentes e inclui termos adicionais sem prioridade por area.
+SEARCHES = list(dict.fromkeys(SEARCHES + [
+    term.casefold().replace(" ", "-") for term in CXCS_SEARCH_TERMS
+]))
 
 def scrape() -> list[dict]:
     vagas = []
