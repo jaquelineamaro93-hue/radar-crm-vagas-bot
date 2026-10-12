@@ -6,6 +6,7 @@ import hashlib
 import os
 import requests
 import re
+from datetime import datetime, timezone
 from scrapers.base import is_product_design_title
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
@@ -82,6 +83,9 @@ def sync_vaga_crm(vaga: dict):
         "published_at": vaga.get("published_at"),
         "category": vaga.get("category"),
         "url_hash": _url_hash(vaga["url"]),
+        "last_seen_at": datetime.now(timezone.utc).isoformat(),
+        "availability_status": "listed",
+        "closure_failures": 0,
     }
 
     try:
