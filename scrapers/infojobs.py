@@ -230,9 +230,11 @@ SEARCHES = [
     ("vagas-de-emprego-klaviyo-trabalho-home-office",                   True, None),
 ]
 
-# CX/CS has priority; preserve every existing search and avoid duplicates.
-_cxcs_first = [("vagas-de-emprego-" + term.casefold().replace(" ", "-") + "-trabalho-home-office", True, None) for term in CXCS_SEARCH_TERMS]
-SEARCHES = _cxcs_first + [item for item in SEARCHES if item not in _cxcs_first]
+# Mantem todos os cargos e adiciona termos ausentes sem favorecer nenhuma area.
+SEARCHES = list(dict.fromkeys(SEARCHES + [
+    ("vagas-de-emprego-" + term.casefold().replace(" ", "-") + "-trabalho-home-office", True, None)
+    for term in CXCS_SEARCH_TERMS
+]))
 
 
 
