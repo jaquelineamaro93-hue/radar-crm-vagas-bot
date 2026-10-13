@@ -61,6 +61,9 @@ def is_product_design_title(title: str) -> bool:
 
 def classify(title: str, description: str = "") -> str | None:
     title_cf = (title or "").casefold()
+    # CRM means customer relationship management, never medical registration.
+    if re.search(r"\b(?:conselho regional de medicina|registro medico|registro médico|crm\s*[-/]?\s*\d{3,})\b", title_cf):
+        return None
     text = ((title or "") + " " + (description or "")).casefold()
 
     # CX/CS precisa ser resolvido antes de CRM. A lista de CRM tem termos
