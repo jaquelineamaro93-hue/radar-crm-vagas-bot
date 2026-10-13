@@ -31,9 +31,6 @@ def _passes_location_filter(vaga: dict) -> bool:
     # Automação: localização já pré-filtrada no scraper (on-site ou remote)
     if cat in ("automacao_presencial", "automacao_remote"):
         return True
-    # Ed. Física: aceita remoto OU presencial em São Paulo
-    if cat == "edfis":
-        return _is_remote(vaga) or _is_sao_paulo(vaga)
     # Product Design: incluir remoto, hibrido e presencial no Brasil.
     if cat == "designer" and is_product_design_title(vaga.get("title", "")):
         return True
