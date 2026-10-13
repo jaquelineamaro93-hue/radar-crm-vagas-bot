@@ -9,7 +9,7 @@ from database import init_db, is_duplicate, save_vaga, upload_to_supabase, is_ve
 # Notifier removido
 from supabase_sync import sync_vaga_crm
 from scrapers import ALL_SCRAPERS
-from scrapers.base import is_recent, is_product_design_title
+from scrapers.base import is_recent, is_product_design_title, classify
 
 # Palavras que indicam vaga presencial — descarta para categorias remotas
 _PRESENCIAL = {"presencial", "on-site", "onsite", "in-office", "híbrido", "hibrido", "hybrid"}
@@ -95,7 +95,7 @@ def run(scrapers: list | None = None) -> int:
     for vaga in filtradas:
         if not vaga.get("title") or not vaga.get("url"):
             continue
-        if is_vendas_vaga(vaga) or is_blacklisted(vaga):
+        # Only ingest roles belonging to the explicitly supported professional families.\n        # Do not accept arbitrary titles just because a description contains "designer".\n        title = vaga.get("title", "")\n        category = vaga.get("category")\n        if category == "designer" and not is_product_design_title(title):\n            print(f"[SKIP] Product Design title outside digital scope: {title}")\n            continue\n        if category in ("fora_escopo", "revisao_escopo", "outros") or not category:\n            continue\n        if is_vendas_vaga(vaga) or is_blacklisted(vaga):
             continue
         if vaga["url"] in seen_urls:
             continue
