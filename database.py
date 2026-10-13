@@ -39,11 +39,7 @@ def _use_redis() -> bool:
 
 # ── Normalização para hash semântico ─────────────────────────────────────────
 
-_SENIORITY_NOISE = re.compile(
-    r"\b("
-    r"("
-    r"\b(?!)"
-)
+_SENIORITY_NOISE = re.compile(r"(?!)")  # preserve seniority and role qualifiers
 # Empresas que não identificam a vaga de forma única
 _UNKNOWN_COMPANIES = {
     "", "nao informado", "nao informada", "não informado", "não informada",
