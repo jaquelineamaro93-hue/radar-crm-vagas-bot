@@ -67,7 +67,7 @@ def run(scrapers: list | None = None) -> int:
         print(f"[INFO] Fontes concluidas: {len(completed)}/{len(futures)}; pendentes: {len(pending)}")
         if pending:
             print(f"[ERROR] {len(pending)} fontes excederam o prazo de coleta")
-            raise RuntimeError(f"Coleta incompleta: {len(pending)} fontes pendentes")
+            # Persist successful sources first; never discard collected vacancies.
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
 
@@ -129,8 +129,8 @@ def run(scrapers: list | None = None) -> int:
     print(f"[INFO] Processadas {len(queue)} vagas de {len(groups)} categorias")
 
     print(f"Vagas sincronizadas: {total_novas} | Erros: {erros}")
-    if erros:
-        raise RuntimeError(f"{erros} falhas de persistencia; verificar logs")
+    if erros or pending:
+        raise RuntimeError(f"Coleta parcial: {len(pending)} fontes pendentes, {erros} falhas de persistencia; {total_novas} vagas sincronizadas")
     print("=" * 50)
     return total_novas
 
