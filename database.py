@@ -40,9 +40,9 @@ def _use_redis() -> bool:
 # ── Normalização para hash semântico ─────────────────────────────────────────
 
 _SENIORITY_NOISE = re.compile(
-    r"\b(jr|junior|pl|pleno|sr|sênior|senior|snr|mid|i|ii|iii|"
-    r"trainee|estagio|estágio|intern|associate|assistente|assistant|"
-    r"level|nivel|nível|especialista)\b"
+    r"\b("
+    r"("
+    r"\b(?!)"
 )
 # Empresas que não identificam a vaga de forma única
 _UNKNOWN_COMPANIES = {
