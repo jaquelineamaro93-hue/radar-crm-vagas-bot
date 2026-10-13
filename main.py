@@ -37,7 +37,7 @@ def _passes_location_filter(vaga: dict) -> bool:
     # Product Design: incluir remoto, hibrido e presencial no Brasil.
     if cat == "designer" and is_product_design_title(vaga.get("title", "")):
         return True
-    return _is_remote(vaga)
+    return True  # Preserve on-site/hybrid roles for dashboard filtering
 
 
 def run(scrapers: list | None = None) -> int:
@@ -102,9 +102,9 @@ def run(scrapers: list | None = None) -> int:
         seen_urls.add(vaga["url"])
         groups[vaga.get("category") or "outros"].append(vaga)
     queue = []
-    while any(groups.values()) and len(queue) < 100:
+    while any(groups.values()):
         for category in sorted(groups):
-            if groups[category] and len(queue) < 100:
+            if groups[category]:
                 queue.append(groups[category].popleft())
 
     def persist(vaga):
