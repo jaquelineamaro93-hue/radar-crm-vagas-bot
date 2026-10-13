@@ -76,7 +76,7 @@ def run(scrapers: list | None = None) -> int:
     # Filtra: localização válida por categoria + publicadas no período por categoria
     # CRM: 60 dias (populate inicial); demais: 30 dias
     def _days_for(vaga: dict) -> int:
-        return 60 if vaga.get("category") in ("crm", "data", "po_pm", "qa") else 30
+        return 60
 
     # Debug filtros individuais
     location_ok = [v for v in all_vagas if _passes_location_filter(v)]
@@ -95,7 +95,15 @@ def run(scrapers: list | None = None) -> int:
     for vaga in filtradas:
         if not vaga.get("title") or not vaga.get("url"):
             continue
-        # Only ingest roles belonging to the explicitly supported professional families.\n        # Do not accept arbitrary titles just because a description contains "designer".\n        title = vaga.get("title", "")\n        category = vaga.get("category")\n        if category == "designer" and not is_product_design_title(title):\n            print(f"[SKIP] Product Design title outside digital scope: {title}")\n            continue\n        if category in ("fora_escopo", "revisao_escopo", "outros") or not category:\n            continue\n        if is_vendas_vaga(vaga) or is_blacklisted(vaga):
+        # Reject unrelated roles before any persistence.
+        title = vaga.get("title", "")
+        category = vaga.get("category")
+        if category == "designer" and not is_product_design_title(title):
+            print(f"[SKIP] Product Design outside digital scope: {title}")
+            continue
+        if category in ("fora_escopo", "revisao_escopo", "outros") or not category:
+            continue
+        if is_vendas_vaga(vaga) or is_blacklisted(vaga):
             continue
         if vaga["url"] in seen_urls:
             continue
