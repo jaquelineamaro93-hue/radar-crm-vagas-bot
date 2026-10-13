@@ -39,30 +39,23 @@ def _url_hash(url: str) -> str:
     return hashlib.sha256(url.strip().encode()).hexdigest()
 
 
+# Official job families in the user's catalog. Category is decided by the scraper,
+# never inferred from an unrelated job description mentioning a tool.
+RADAR_CATEGORIES = frozenset({
+    "crm", "cxcs", "designer", "marketing", "revops", "salesops",
+    "ia", "data", "po_pm", "qa", "tech", "automacao",
+    "automacao_presencial", "automacao_remote",
+})
+
+
 def _matches_crm_ecosystem(vaga: dict) -> bool:
-    """Vagas que devem aparecer no dashboard da comunidade."""
+    """Publish all authorized job families equally; no legacy CRM-only gate."""
     category = (vaga.get("category") or "").strip().lower()
-
-    # O dashboard usa vagas_crm como tabela de exibição. CX/CS é uma
-    # categoria oficial do bot e não pode depender de conter "crm",
-    # "marketing" ou outra keyword histórica para ser sincronizada.
-    if category in {"crm", "cxcs"}:
-        return True
-
-    # Publicar vagas de Product Design, UX/UI e pesquisa sem incluir todo design grafico.
-    if category == "designer" and is_product_design_title(vaga.get("title", "")):
-        return True
-
-    text_to_search = " ".join([
-        vaga.get("title", ""),
-        category,
-        vaga.get("description", ""),
-    ]).lower()
-
-    for keyword in CRM_KEYWORDS:
-        if keyword.lower() in text_to_search:
-            return True
-    return False
+    if category not in RADAR_CATEGORIES:
+        return False
+    if category == "designer":
+        return is_product_design_title(vaga.get("title", ""))
+    return True
 
 
 def sync_vaga_crm(vaga: dict):
