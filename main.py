@@ -68,6 +68,9 @@ def run(scrapers: list | None = None) -> int:
             except Exception as e:
                 print(f"[WARN] Fonte indisponivel: {e}")
         print(f"[INFO] Fontes concluidas: {len(completed)}/{len(futures)}; pendentes: {len(pending)}")
+        if pending:
+            print(f"[ERROR] {len(pending)} fontes excederam o prazo de coleta")
+            raise RuntimeError(f"Coleta incompleta: {len(pending)} fontes pendentes")
     finally:
         executor.shutdown(wait=False, cancel_futures=True)
 
@@ -128,7 +131,9 @@ def run(scrapers: list | None = None) -> int:
                 erros += 1
     print(f"[INFO] Processadas {len(queue)} vagas de {len(groups)} categorias")
 
-    print(f"Novas vagas: {total_novas} | Erros: {erros}")
+    print(f"Vagas sincronizadas: {total_novas} | Erros: {erros}")
+    if erros:
+        raise RuntimeError(f"{erros} falhas de persistencia; verificar logs")
     print("=" * 50)
     return total_novas
 
