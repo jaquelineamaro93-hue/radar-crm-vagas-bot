@@ -257,7 +257,7 @@ def _clean_company(el) -> str:
     return el.get_text(strip=True) or "Não informado"
 
 
-def scrape() -> list[dict]:
+def scrape(searches=None) -> list[dict]:
     vagas: list[dict] = []
     seen_ids: set[str] = set()
 
@@ -274,7 +274,7 @@ def scrape() -> list[dict]:
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     })
 
-    for slug, _remote, forced_cat in SEARCHES:
+    for slug, _remote, forced_cat in (searches if searches is not None else SEARCHES):
         url = f"{BASE_URL}/{slug}.aspx"
         try:
             resp = session.get(url, timeout=(5, 12))
