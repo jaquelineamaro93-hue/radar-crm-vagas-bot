@@ -9,7 +9,7 @@ import os
 import re
 import unicodedata
 
-DEFAULT_BATCH_SIZE = 16
+DEFAULT_BATCH_SIZE = 5
 
 FAMILIES = [
     ("crm", (r"\bcrm\b", r"relacionamento")),
@@ -43,15 +43,18 @@ def select_searches(terms, source='', limit=None, day_index=None):
     labels=[_label(t) for t in terms]
     selected=[]
     used=set()
-    for _,patterns in FAMILIES:
+    # Gira o ponto de partida por fonte e dia; nenhuma área domina todos os ciclos.
+    if day_index is None:
+        day_index=datetime.now(timezone.utc).date().toordinal()
+    start_family=(day_index+sum(ord(c) for c in source))%len(FAMILIES)
+    ordered=FAMILIES[start_family:]+FAMILIES[:start_family]
+    for _,patterns in ordered:
         candidates=[i for i,t in enumerate(labels) if i not in used and any(re.search(p,t) for p in patterns)]
         if not candidates:continue
         choice=min(candidates,key=lambda i:(len(labels[i]),i))
         used.add(choice);selected.append(choice)
         if len(selected)>=limit:return [terms[i] for i in selected]
     remaining=[i for i in range(len(terms)) if i not in used]
-    if day_index is None:
-        day_index=datetime.now(timezone.utc).date().toordinal()
     window=limit-len(selected)
     start=(day_index*max(1,window))%len(remaining)
     selected.extend(remaining[(start+j)%len(remaining)] for j in range(window))
