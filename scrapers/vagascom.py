@@ -211,7 +211,7 @@ SEARCHES = list(dict.fromkeys(SEARCHES + [
 ]))
 
 
-def scrape() -> list[dict]:
+def scrape(searches=None) -> list[dict]:
     vagas = []
     seen = set()
 
@@ -221,7 +221,7 @@ def scrape() -> list[dict]:
         "Accept-Language": "pt-BR,pt;q=0.9",
     })
 
-    for slug in SEARCHES:
+    for slug in (searches if searches is not None else SEARCHES):
         try:
             url = f"{BASE_URL}/{slug}"
             resp = session.get(url, timeout=(5, 12))
