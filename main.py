@@ -37,115 +37,118 @@ def _passes_location_filter(vaga: dict) -> bool:
     return True  # Preserve on-site/hybrid roles for dashboard filtering
 
 
-def run(scrapers: list | None = None) -> int:
-    print("=" * 50)
-    print("Iniciando coleta de vagas...")
+def run(scrapers: list | None = None, report: dict | None = None) -> int:
+    """Um único ciclo com todas as famílias, buscas equilibradas e diagnóstico.
 
-    # Debug: verificar qual chave está sendo usada
+    Fontes sem resposta não bloqueiam a gravação das fontes concluídas.
+    Não apaga vagas nem separa CRM de Product Design em crons diferentes.
+    """
+    import inspect
     import os
-    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
-    anon_key = os.getenv("SUPABASE_ANON_KEY", "")
-    print(f"[DEBUG] SERVICE_ROLE_KEY presente: {bool(service_key)} (len={len(service_key) if service_key else 0})")
-    print(f"[DEBUG] ANON_KEY presente: {bool(anon_key)} (len={len(anon_key) if anon_key else 0})")
-    print(f"[DEBUG] Será usado: {'SERVICE_ROLE' if service_key else 'ANON'}")
-
-    init_db()
-
-    # Vercel Hobby functions have a bounded execution window. Never wait
-    # 120s for scrapers before beginning database writes.
-    all_vagas: list[dict] = []
-    executor = ThreadPoolExecutor(max_workers=12)
-    try:
-        futures = {executor.submit(_safe_scrape, fn): fn.__module__
-                   for fn in (scrapers if scrapers is not None else ALL_SCRAPERS)}
-        completed, pending = wait(futures, timeout=25)
-        for future in completed:
-            try:
-                all_vagas.extend(future.result())
-            except Exception as e:
-                print(f"[WARN] Fonte indisponivel: {e}")
-        print(f"[INFO] Fontes concluidas: {len(completed)}/{len(futures)}; pendentes: {len(pending)}")
-        if pending:
-            print(f"[ERROR] {len(pending)} fontes excederam o prazo de coleta")
-            # Persist successful sources first; never discard collected vacancies.
-    finally:
-        executor.shutdown(wait=False, cancel_futures=True)
-
-    print(f"[DEBUG] Total coletado: {len(all_vagas)} vagas")
-
-    # Filtra: localização válida por categoria + publicadas no período por categoria
-    # CRM: 60 dias (populate inicial); demais: 30 dias
-    def _days_for(vaga: dict) -> int:
-        return 60
-
-    # Debug filtros individuais
-    location_ok = [v for v in all_vagas if _passes_location_filter(v)]
-    print(f"[DEBUG] Após filtro localização: {len(location_ok)}")
-
-    recent_ok = [v for v in location_ok if is_recent(v.get("published_at"), days=_days_for(v))]
-    print(f"[DEBUG] Após filtro data: {len(recent_ok)}")
-
-    filtradas = recent_ok
-    print(f"[DEBUG] Total após filtros: {len(filtradas)}")
-
-    # Keep a bounded workload, interleaving categories so none is preferred.
     from collections import defaultdict, deque
-    groups = defaultdict(deque)
-    seen_urls = set()
-    for vaga in filtradas:
-        if not vaga.get("title") or not vaga.get("url"):
-            continue
-        # Reject unrelated roles before any persistence.
-        title = vaga.get("title", "")
-        category = vaga.get("category")
-        if category == "designer" and not is_product_design_title(title):
-            print(f"[SKIP] Product Design outside digital scope: {title}")
-            continue
-        if category in ("fora_escopo", "revisao_escopo", "outros") or not category:
-            continue
-        if is_vendas_vaga(vaga) or is_blacklisted(vaga):
-            continue
-        if vaga["url"] in seen_urls:
-            continue
-        seen_urls.add(vaga["url"])
-        groups[vaga.get("category") or "outros"].append(vaga)
-    queue = []
+    from search_plan import select_searches
+
+    print("=" * 50)
+    print("[RADAR] Coleta unificada iniciada")
+    init_db()
+    report = report if report is not None else {}
+    report.clear()
+    report.update({"mode": "unified", "sources": {}, "partial": False})
+
+    tasks = {}
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for fn in (scrapers if scrapers is not None else ALL_SCRAPERS):
+            name = fn.__module__.rsplit(".",1)[-1]
+            all_terms = fn.__globals__.get("SEARCHES")
+            supports_batch = "searches" in inspect.signature(fn).parameters
+            selected = select_searches(all_terms, source=name, limit=16) if supports_batch and all_terms is not None else None
+            report["sources"][name] = {"configured_queries": len(all_terms or ()),
+                                       "queries_attempted": len(selected) if selected is not None else None}
+            tasks[pool.submit(_safe_scrape, fn, selected)] = name
+        # Full scans of hundreds of serial searches never finished within 25s.
+        # The bounded batch above allows the job to finish on Vercel Fluid Compute.
+        timeout = min(235, max(40, int(os.getenv("RADAR_COLLECT_TIMEOUT", "175"))))
+        completed, pending = wait(tasks,timeout=timeout)
+        all_vagas = []
+        for future in completed:
+            name=tasks[future]
+            try:
+                found=future.result()
+                all_vagas.extend(found)
+                report["sources"][name]["found"] = len(found)
+                report["sources"][name]["state"] = "ok" if found else "empty"
+            except Exception as exc:
+                report["sources"][name]["state"] = "error"
+                report["sources"][name]["error_type"] = type(exc).__name__
+                print(f"[RADAR] Fonte {name} falhou: {type(exc).__name__}")
+        for future in pending:
+            name=tasks[future]
+            report["sources"][name]["state"] = "timeout"
+            future.cancel()
+        report["partial"] = bool(pending)
+        report["raw_count"] = len(all_vagas)
+        # Do not wait for long-running requests after the deadline.
+        pool.shutdown(wait=False, cancel_futures=True)
+    print(f"[RADAR] Fontes concluídas: {len(completed)}/{len(tasks)}; coletadas: {len(all_vagas)}")
+
+    filtered=[v for v in all_vagas if _passes_location_filter(v) and is_recent(v.get("published_at"),days=60)]
+    groups=defaultdict(deque)
+    seen_urls=set()
+    for vaga in filtered:
+        title=vaga.get("title") or ""
+        url=vaga.get("url") or ""
+        category=vaga.get("category")
+        if not title or not url:continue
+        if category=="designer" and not is_product_design_title(title):continue
+        if category in ("fora_escopo","revisao_escopo","outros") or not category:continue
+        if is_vendas_vaga(vaga) or is_blacklisted(vaga):continue
+        if url in seen_urls:continue
+        seen_urls.add(url)
+        groups[category].append(vaga)
+    queue=[]
     while any(groups.values()):
         for category in sorted(groups):
             if groups[category]:
                 queue.append(groups[category].popleft())
+    report["valid_count"]=len(queue)
+    category_counts={}
+    for job in queue:
+        category=job.get("category","outros")
+        category_counts[category]=category_counts.get(category,0)+1
+    report["by_category"]=category_counts
 
     def persist(vaga):
-        # Upsert into the public catalog even if the job is already in the
-        # local dedup cache; this updates last_seen_at without deleting history.
-        synced = sync_vaga_crm(vaga)
-        if not is_duplicate(vaga["title"], vaga.get("company", ""), vaga["url"]):
+        synced=sync_vaga_crm(vaga)
+        if not is_duplicate(vaga["title"],vaga.get("company",""),vaga["url"]):
             if upload_to_supabase(vaga):
                 save_vaga(vaga)
         return bool(synced)
 
-    total_novas = 0
-    erros = 0
+    synced_total=0
+    errors=0
     with ThreadPoolExecutor(max_workers=12) as pool:
-        jobs = [pool.submit(persist, vaga) for vaga in queue]
-        for future in jobs:
+        futures=[pool.submit(persist,v) for v in queue]
+        for future in futures:
             try:
-                total_novas += int(future.result())
-            except Exception as e:
-                print(f"[ERRO] Falha ao sincronizar vaga: {e}")
-                erros += 1
-    print(f"[INFO] Processadas {len(queue)} vagas de {len(groups)} categorias")
+                synced_total+=int(future.result())
+            except Exception as exc:
+                errors+=1
+                print(f"[RADAR] Falha ao persistir: {type(exc).__name__}")
+    report["synced_count"]=synced_total
+    report["persistence_errors"]=errors
+    if errors:
+        raise RuntimeError(f"{errors} erros de gravação; sincronizadas={synced_total}")
+    if not queue:
+        raise RuntimeError("Nenhuma vaga elegível coletada; revisar fontes, bloqueios e buscas")
+    if synced_total == 0:
+        raise RuntimeError("Nenhuma vaga sincronizada; revisar permissões e retorno do Supabase")
+    print(f"[RADAR] Sincronizadas: {synced_total}; categorias: {category_counts}; parcial: {report['partial']}")
+    return synced_total
 
-    print(f"Vagas sincronizadas: {total_novas} | Erros: {erros}")
-    if erros or pending:
-        raise RuntimeError(f"Coleta parcial: {len(pending)} fontes pendentes, {erros} falhas de persistencia; {total_novas} vagas sincronizadas")
-    print("=" * 50)
-    return total_novas
 
-
-def _safe_scrape(fn) -> list[dict]:
+def _safe_scrape(fn, searches=None) -> list[dict]:
     try:
-        return fn()
+        return fn(searches=searches) if searches is not None else fn()
     except Exception as e:
         print(f"[ERRO] {fn.__module__}: {e}")
         return []
