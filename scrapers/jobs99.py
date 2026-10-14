@@ -11,7 +11,7 @@ BASE_URL = "https://99jobs.com"
 
 SEARCHES = ["crm", "salesforce", "hubspot", "rd+station", "marketing+de+relacionamento", "braze", "klaviyo"]
 
-def scrape() -> list[dict]:
+def scrape(searches=None) -> list[dict]:
     vagas = []
     seen = set()
     session = requests.Session()
@@ -20,7 +20,7 @@ def scrape() -> list[dict]:
         "Accept": "text/html,application/xhtml+xml",
         "Accept-Language": "pt-BR,pt;q=0.9",
     })
-    for q in SEARCHES:
+    for q in (searches if searches is not None else SEARCHES):
         try:
             url = f"{BASE_URL}/opportunities?q={q}&remote=true"
             resp = session.get(url, timeout=(5, 12))
