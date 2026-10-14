@@ -29,6 +29,8 @@ SEARCHES = list(dict.fromkeys(
 def scrape(searches=None) -> list[dict]:
     vagas=[]
     seen=set()
+    http_ok = 0
+    http_errors = {}
     planned = list(searches) if searches is not None else SEARCHES
     with requests.Session() as session:
         session.headers.update({
@@ -40,10 +42,12 @@ def scrape(searches=None) -> list[dict]:
                 # Não limitar a remoto: o portal também precisa de vagas híbridas/presenciais.
                 resp=session.get(API_URL,params={"jobName":query,"limit":20,"offset":0},timeout=(3,8))
                 if resp.status_code != 200:
+                    http_errors[resp.status_code] = http_errors.get(resp.status_code, 0) + 1
                     print(f"[Gupy] HTTP {resp.status_code} para {query!r}")
                     continue
+                http_ok += 1
                 parsed=resp.json()
-                jobs=parsed.get("data",[]) if isinstance(parsed,dict) else []
+                jobs=parsed.get("data",[]) if isinstance(parsed,dict) else (parsed if isinstance(parsed,list) else [])
                 for job in jobs:
                     if not isinstance(job,dict):continue
                     title=job.get("name") or job.get("title") or ""
@@ -64,5 +68,7 @@ def scrape(searches=None) -> list[dict]:
                     })
             except (requests.RequestException, ValueError,TypeError) as error:
                 print(f"[Gupy] Falha em {query!r}: {type(error).__name__}")
-    print(f"[Gupy] {len(vagas)} vagas válidas em {len(planned)} consultas")
+    if planned and http_ok == 0 and http_errors:
+        raise RuntimeError(f"Gupy indisponivel: HTTP {http_errors}")
+    print(f"[Gupy] {len(vagas)} vagas válidas em {len(planned)} consultas; HTTP200={http_ok}; erros={http_errors}")
     return vagas
