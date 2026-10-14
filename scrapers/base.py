@@ -207,6 +207,13 @@ def extract_publication_date(card):
             except (ValueError, TypeError):
                 pass
         try:
+            # Nao tratar palavras no titulo/descricao como data de publicacao.
+            node_class = " ".join(node.get("class") or []).lower()
+            node_id = str(node.get("id") or "").lower()
+            if node.name != "time" and not re.search(
+                r"(date|data|published|posted|publica|postado)", node_class + " " + node_id
+            ):
+                continue
             label = node.get_text(" ", strip=True).lower()
             if re.search(r"\b(?:há\s*\d+\s*(?:dias?|horas?|semanas?)|"
                          r"\d+\s*(?:days?|hours?|weeks?)\s*ago|hoje|ontem)\b", label):
