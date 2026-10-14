@@ -43,6 +43,43 @@ class NewSourceTests(unittest.TestCase):
             ["https://vagasremotas.com.br/vagas-home-office-remoto/analista-crm/"]
         )
 
+    def test_vagasremotas_date_posted_em_ingles(self):
+        html = (
+            '<main><h1>Customer Success Manager</h1>'
+            '<div>Job Overview</div><p>Date Posted: Posted 2 days ago</p></main>'
+        )
+        job = _parse_job(
+            html, "https://vagasremotas.com.br/vagas-home-office-remoto/csm/"
+        )
+        self.assertIsNotNone(job)
+        self.assertEqual(job["category"], "cxcs")
+        self.assertLess(
+            datetime.now(timezone.utc) -
+            datetime.fromisoformat(job["published_at"]), timedelta(days=3)
+        )
+
+    def test_dev_permitido_e_mapeado_para_tech(self):
+        from unittest.mock import patch
+        from supabase_sync import (
+            _matches_crm_ecosystem, _taxonomia, sync_vaga_crm,
+        )
+        job = {
+            "title": "Salesforce Developer", "category": "dev",
+            "url": "https://startup.jobs/jobs/test-dev",
+            "source": "Startup.jobs",
+            "published_at": datetime.now(timezone.utc).isoformat(),
+        }
+        self.assertTrue(_matches_crm_ecosystem(job))
+        self.assertEqual(_taxonomia(job)[0], "tech")
+        with patch("supabase_sync.SUPABASE_URL", "https://example.invalid"), \
+                patch("supabase_sync.SUPABASE_KEY", "test-placeholder"), \
+                patch("supabase_sync.requests.post") as mocked_post:
+            mocked_post.return_value.ok = True
+            self.assertTrue(sync_vaga_crm(job))
+            payload = mocked_post.call_args.kwargs["json"]
+            self.assertEqual(payload["category"], "tech")
+            self.assertIn("dev", payload["tags_correlatas"])
+
     def test_vagascom_voce_data_do_proprio_card(self):
         now = datetime.now(timezone.utc)
         html = ('<li><h2 class="cargo">'
