@@ -1,13 +1,15 @@
 """
-Scraper para Vagas.com.br — focado em CRM.
+Scraper para Vagas.com Você, com todas as familias do Radar.
 Usa o atributo title= do link para pegar o título correto.
 """
+import re
+from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
-from .base import classify, extract_publication_date
+from .base import classify, extract_publication_date, relative_to_iso
 from config import CXCS_SEARCH_TERMS
 
-SOURCE = "Vagas.com"
+SOURCE = "Vagas.com Você"
 BASE_URL = "https://www.vagas.com.br"
 
 SEARCHES = [
@@ -211,6 +213,37 @@ SEARCHES = list(dict.fromkeys(SEARCHES + [
 ]))
 
 
+_VISIBLE_DATE = re.compile(
+    r"^(?:hoje|ontem|há\s*\d+\s*(?:dia|dias|hora|horas|semana|semanas)|\d{2}/\d{2}/\d{4})$",
+    re.IGNORECASE,
+)
+
+
+def _card_publication(link):
+    """Data no mesmo card da vaga; nao reutiliza a data de outro anuncio."""
+    for parent in link.find_parents(["article", "li", "div"], limit=7):
+        if len(parent.select("a.link-detalhes-vaga")) != 1:
+            continue
+        from_attributes = extract_publication_date(parent)
+        if from_attributes:
+            return from_attributes
+        for item in parent.stripped_strings:
+            token = item.strip()
+            if not _VISIBLE_DATE.fullmatch(token):
+                continue
+            if re.fullmatch(r"\d{2}/\d{2}/\d{4}", token):
+                try:
+                    return datetime.strptime(token, "%d/%m/%Y").replace(
+                        tzinfo=timezone.utc
+                    ).isoformat()
+                except ValueError:
+                    continue
+            date = relative_to_iso(token)
+            if date:
+                return date
+    return None
+
+
 def scrape(searches=None) -> list[dict]:
     vagas = []
     seen = set()
@@ -259,7 +292,7 @@ def scrape(searches=None) -> list[dict]:
                     "description": "",
                     "source": SOURCE,
                     "category": category,
-                    "published_at": extract_publication_date(link.find_parent(["article", "li", "div"]) or link),
+                    "published_at": _card_publication(link),
                 })
         except Exception as e:
             print(f"[Vagas.com] Erro '{slug}': {e}")
