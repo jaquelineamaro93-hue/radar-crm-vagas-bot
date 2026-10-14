@@ -127,7 +127,7 @@ def _result_to_vaga(r: dict) -> dict | None:
     }
 
 
-def scrape() -> list[dict]:
+def scrape(searches=None) -> list[dict]:
     vagas: list[dict] = []
     seen_jks: set[str] = set()
 
@@ -143,7 +143,7 @@ def scrape() -> list[dict]:
         "Referer": BASE_URL,
     })
 
-    for query, fromage in SEARCHES:
+    for query, fromage in (searches if searches is not None else SEARCHES):
         try:
             resp = session.get(
                 SEARCH_URL,
