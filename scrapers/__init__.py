@@ -6,10 +6,14 @@ from .vagascom import scrape as scrape_vagascom
 from .jobs99 import scrape as scrape_jobs99
 from .solides import scrape as scrape_solides
 from .indeed import scrape as scrape_indeed
+from .startupjobs import scrape as scrape_startupjobs
+from .vagasremotas import scrape as scrape_vagasremotas
 
 ALL_SCRAPERS = [
     scrape_linkedin,
     scrape_gupy,
+    scrape_startupjobs,
+    scrape_vagasremotas,
     scrape_infojobs,
     scrape_catho,
     scrape_vagascom,
