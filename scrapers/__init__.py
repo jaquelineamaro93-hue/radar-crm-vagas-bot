@@ -9,15 +9,14 @@ from .indeed import scrape as scrape_indeed
 from .startupjobs import scrape as scrape_startupjobs
 from .vagasremotas import scrape as scrape_vagasremotas
 
+# Indeed e VagasRemotas permanecem no codigo, mas nao sao executados.
 ALL_SCRAPERS = [
     scrape_linkedin,
     scrape_gupy,
     scrape_startupjobs,
-    scrape_vagasremotas,
     scrape_infojobs,
     scrape_catho,
     scrape_vagascom,
     scrape_jobs99,
     scrape_solides,
-    scrape_indeed,
 ]
