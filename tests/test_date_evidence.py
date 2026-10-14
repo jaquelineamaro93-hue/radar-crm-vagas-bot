@@ -1,9 +1,13 @@
 import unittest
 from bs4 import BeautifulSoup
 from scrapers.base import extract_publication_date
+from scrapers.gupy import API_URL as GUPY_API_URL
 
 
 class DateEvidenceTests(unittest.TestCase):
+    def test_gupy_public_endpoint(self):
+        self.assertEqual(GUPY_API_URL, 'https://portal.gupy.io/api/job-search/jobs')
+
     def test_nao_inventa_data_por_palavra_no_titulo(self):
         card = BeautifulSoup(
             '<article><h2>Marketing de hoje e CRM</h2></article>', 'html.parser'
