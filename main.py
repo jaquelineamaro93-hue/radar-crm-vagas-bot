@@ -123,12 +123,17 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
             x.get("state") in ("error", "timeout") for x in report["sources"].values())
         for future in save_futures:
             try:
-                report["synced_count"]+=int(future.result())
+                if future.result():
+                    report["synced_count"] += 1
+                else:
+                    # False tambem e falha: a versao antiga so contava excecoes.
+                    report["persistence_errors"] += 1
             except Exception as e:
-                report["persistence_errors"]+=1
+                report["persistence_errors"] += 1
                 print(f"[RADAR] Persistência: {type(e).__name__}")
         if report["persistence_errors"]:
-            raise RuntimeError(f"{report['persistence_errors']} falhas de gravação")
+            report["partial"] = True
+            print(f"[RADAR] {report['persistence_errors']} sincronizacoes nao confirmadas")
         # Zero vagas novas e uma situacao valida. Diferencie-a de falha de fonte.
         # Sem tentar gravar registros nao ha sincronizacao a confirmar.
         if save_futures and not report["synced_count"]:
