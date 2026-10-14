@@ -9,7 +9,7 @@ from config import KEYWORDS, CXCS_SEARCH_TERMS
 from .base import classify
 
 SOURCE = "Gupy"
-API_URL = "https://employability-portal.gupy.io/api/v1/jobs"
+API_URL = "https://portal.gupy.io/api/job-search/jobs"
 APPROVED_FAMILIES = (
     "crm", "cxcs", "marketing", "designer", "revops", "salesops",
     "ia", "data", "po_pm", "qa", "tech", "automacao",
@@ -64,7 +64,7 @@ def scrape(searches=None) -> list[dict]:
                         "url":url,"location":location,
                         "description":str(job.get("description") or "")[:300],
                         "source":SOURCE,"category":category,
-                        "published_at":job.get("publishedAt") or job.get("createdAt"),
+                        "published_at":job.get("publishedDate") or job.get("publishedAt") or job.get("createdAt"),
                     })
             except (requests.RequestException, ValueError,TypeError) as error:
                 print(f"[Gupy] Falha em {query!r}: {type(error).__name__}")
