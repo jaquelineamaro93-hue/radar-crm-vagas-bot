@@ -42,7 +42,7 @@ def _url_hash(url: str) -> str:
 # Official job families in the user's catalog. Category is decided by the scraper,
 # never inferred from an unrelated job description mentioning a tool.
 RADAR_CATEGORIES = frozenset({
-    "crm", "cxcs", "designer", "marketing", "revops", "salesops",
+    "crm", "cxcs", "designer", "marketing", "revops", "salesops", "dev",
     "ia", "data", "po_pm", "qa", "tech", "automacao",
     "automacao_presencial", "automacao_remote",
 })
@@ -63,7 +63,7 @@ def _taxonomia(vaga):
     category=(vaga.get("category") or "").lower()
     title=(vaga.get("title") or "").lower()
     family={"designer":"product-design","ia":"ai","data":"data-analytics",
-            "po_pm":"product-management","automacao":"marketing-automation",
+            "po_pm":"product-management","dev":"tech","automacao":"marketing-automation",
             "automacao_presencial":"marketing-automation",
             "automacao_remote":"marketing-automation"}.get(category,category)
     if category=="cxcs":
@@ -123,7 +123,7 @@ def sync_vaga_crm(vaga: dict):
         "description": (vaga.get("description") or "")[:2000],
         "source": (vaga.get("source") or "")[:100],
         "published_at": vaga.get("published_at"),
-        "category": vaga.get("category"),
+        "category": "tech" if (vaga.get("category") or "").strip().lower() == "dev" else vaga.get("category"),
         "url_hash": _url_hash(vaga["url"]),
         "last_seen_at": datetime.now(timezone.utc).isoformat(),
         # O cadastro da vaga não comprova disponibilidade.

@@ -12,7 +12,8 @@ SOURCE = "VagasRemotas.com.br"
 BASE_URL = "https://vagasremotas.com.br"
 SEARCHES = [
     BASE_URL + "/vagas-home-office-remoto/",
-    BASE_URL + "/vagas-home-office-remoto/page/2/",
+    BASE_URL + "/",
+    BASE_URL + "/trabalho-home-office/vaga-nacional/",
 ]
 _JOB_PATH = re.compile(r"^/vagas-home-office-remoto/[^/?#]+/?$")
 
@@ -38,15 +39,15 @@ def _published(soup):
                 return dt.replace(tzinfo=timezone.utc).isoformat() if not dt.tzinfo else dt.isoformat()
             except (ValueError, TypeError):
                 pass
-    for node in soup.find_all(string=re.compile(r"Data\s+Postada", re.I)):
+    for node in soup.find_all(string=re.compile(r"(?:Data\s+Postada|Date\s+Posted)", re.I)):
         label = node.parent.get_text(" ", strip=True) if node.parent else str(node)
         m = re.search(
-            r"Data\s+Postada\s*:\s*(?:Posted\s*)?(\d+)\s*(horas?|hours?|dias?|days?|semanas?|weeks?|meses?|months?)\s*(?:ago|atr[aá]s)?",
+            r"(?:Data\s+Postada|Date\s+Posted)\s*:\s*(?:Posted\s*)?(\d+)\s*(horas?|hours?|dias?|days?|semanas?|weeks?|m[eê]s(?:es)?|months?)\s*(?:ago|atr[aá]s)?",
             label, re.I,
         )
         if m:
             count, unit = int(m.group(1)), m.group(2).casefold()
-            days = count * (30 if "mes" in unit or "month" in unit else
+            days = count * (30 if "mes" in unit or "mês" in unit or "month" in unit else
                             7 if "sem" in unit or "week" in unit else 1)
             delta = timedelta(hours=count) if "hora" in unit or "hour" in unit else timedelta(days=days)
             return (datetime.now(timezone.utc) - delta).isoformat()
@@ -73,14 +74,16 @@ def _parse_job(html, url):
 def scrape(searches=None):
     indices = list(searches if searches is not None else SEARCHES)
     jobs, seen, successful = [], set(), 0
+    http_errors = {}
     with requests.Session() as session:
-        session.headers.update({"User-Agent": "ConexaoCRMJobs/1.0", "Accept": "text/html"})
+        session.headers.update({"User-Agent": "Mozilla/5.0 (compatible; ConexaoCRMJobs/1.0)", "Accept": "text/html,application/xhtml+xml", "Accept-Language": "pt-BR,pt;q=0.9"})
         for index in indices:
             if urlparse(index).hostname not in ("vagasremotas.com.br", "www.vagasremotas.com.br"):
                 raise ValueError("Endereco fora do dominio")
             try:
                 response = session.get(index, timeout=(4, 9))
                 if response.status_code != 200:
+                    http_errors[response.status_code] = http_errors.get(response.status_code, 0) + 1
                     continue
                 successful += 1
                 for url in _list_links(response.text):
@@ -96,6 +99,6 @@ def scrape(searches=None):
             except requests.RequestException as exc:
                 print(f"[VagasRemotas] Falha: {type(exc).__name__}")
     if indices and not successful:
-        raise RuntimeError("VagasRemotas indices indisponiveis")
+        raise RuntimeError(f"VagasRemotas indices indisponiveis; HTTP={http_errors}")
     print(f"[VagasRemotas] {len(jobs)} vagas datadas em {len(seen)} detalhes")
     return jobs
