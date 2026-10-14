@@ -58,6 +58,46 @@ def _matches_crm_ecosystem(vaga: dict) -> bool:
     return True
 
 
+def _taxonomia(vaga):
+    """Categorias e tags de título; não inferir família a partir de descrições soltas."""
+    category=(vaga.get("category") or "").lower()
+    title=(vaga.get("title") or "").lower()
+    family={"designer":"product-design","ia":"ai","data":"data-analytics",
+            "po_pm":"product-management","automacao":"marketing-automation",
+            "automacao_presencial":"marketing-automation",
+            "automacao_remote":"marketing-automation"}.get(category,category)
+    if category=="cxcs":
+        family="customer-success" if re.search(r"(customer success|sucesso do cliente|\\bcs\\b)",title) else "customer-experience"
+    tags=[category,family]
+    for term,label in (("salesforce","salesforce"),("hubspot","hubspot"),
+                       ("marketing cloud","marketing-cloud"),("revops","revops"),
+                       ("growth","growth"),("ux","ux"),("e-commerce","ecommerce")):
+        if term in title and label not in tags:tags.append(label)
+    return family,list(dict.fromkeys(tags))
+
+
+def _metadata(vaga):
+    title=(vaga.get("title") or "")
+    description=re.sub(r"\\s+"," ",str(vaga.get("description") or "")).strip()
+    loc=(vaga.get("location") or "").lower()
+    text=" ".join(str(vaga.get(k) or "") for k in ("modality","modality_label","job_type","work_model"))
+    combined=(loc+" "+text).lower()
+    if re.search(r"(remot|home.?office)",combined):modality="Remoto"
+    elif re.search(r"(híbr|hibrid|hybrid)",combined):modality="Híbrido"
+    elif re.search(r"(presencial|on.site|onsite)",combined):modality="Presencial"
+    else:modality=None
+    t=title.lower()
+    if re.search(r"(estági|estagi|internship|trainee)",t):seniority="Estágio"
+    elif re.search(r"(júnior|junior|\\bjr\\b)",t):seniority="Júnior"
+    elif re.search(r"(\\bpleno\\b|mid.level)",t):seniority="Pleno"
+    elif re.search(r"(sênior|senior|\\bsr\\b)",t):seniority="Sênior"
+    elif re.search(r"(gerente|manager|coordenad|head|lead|diretor)",t):seniority="Liderança"
+    else:seniority=None
+    contract_text=" ".join(str(vaga.get(k) or "") for k in ("contract","contract_type","job_type","description")).lower()
+    contract="CLT" if re.search(r"\\bclt\\b",contract_text) else "PJ" if re.search(r"\\bpj\\b",contract_text) else None
+    return modality,seniority,description[:250] if description else None,contract
+
+
 def sync_vaga_crm(vaga: dict):
     if not _configured():
         return
@@ -66,7 +106,16 @@ def sync_vaga_crm(vaga: dict):
     if not vaga.get("title") or not vaga.get("url"):
         return
 
+    category_slug,tags=_taxonomia(vaga)
+    modality,seniority,snippet,contract=_metadata(vaga)
     payload = {
+        "categoria_slug": category_slug,
+        "tags_correlatas": tags,
+        "modalidade_normalizada": modality,
+        "senioridade_normalizada": seniority,
+        "descricao_resumo": snippet,
+        "data_sync": datetime.now(timezone.utc).isoformat(),
+        "tipo_contrato": contract,
         "title": vaga.get("title", "")[:500],
         "company": (vaga.get("company") or "Não informado")[:255],
         "location": (vaga.get("location") or "")[:255],
