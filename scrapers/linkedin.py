@@ -259,7 +259,7 @@ SEARCHES.extend(
 BASE_URL = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search"
 
 
-def scrape() -> list[dict]:
+def scrape(searches=None) -> list[dict]:
     vagas = []
     session = requests.Session()
     session.headers.update({
@@ -271,7 +271,7 @@ def scrape() -> list[dict]:
         "Accept-Language": "pt-BR,pt;q=0.9",
     })
 
-    for keyword, location, f_wt, f_tpr in SEARCHES:
+    for keyword, location, f_wt, f_tpr in (searches if searches is not None else SEARCHES):
         params = {
             "keywords": keyword,
             "location": location,
