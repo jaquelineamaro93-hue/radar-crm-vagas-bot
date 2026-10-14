@@ -150,6 +150,28 @@ def cleanup_vagas_fechadas():
     return 0
 
 
+@app.route("/api/sync-open-to-work", methods=["GET", "POST"])
+def sync_open_to_work():
+    """Cron autenticado ou webhook on-change do Google Apps Script."""
+    from flask import request
+    secret=os.environ.get("CRON_SECRET","")
+    if not secret or request.headers.get("Authorization","")!=f"Bearer {secret}":
+        return jsonify({"error":"Unauthorized"}),401
+    try:
+        from otw_sync import sync_sheet
+        result=sync_sheet()
+        # Não retornar informações pessoais da planilha
+        return jsonify({"status":"ok" if not result["errors"] else "partial",
+                        "rows_received":result["received"],
+                        "rows_staged":result["staged"],
+                        "rows_published":result["published"],
+                        "rows_skipped_without_consent":result["skipped_no_consent"],
+                        "rows_skipped_user_managed":result["skipped_user_owned"]}),200
+    except Exception as error:
+        app.logger.error("Falha Open to Work: %s",type(error).__name__)
+        return jsonify({"status":"error","reason":type(error).__name__}),500
+
+
 # ============ MATCH POR IA (candidates / freelancers / platforms) ============
 import csv as _csv
 import io as _io
@@ -161,7 +183,7 @@ _SUPABASE_ANON_KEY_MATCH = "sb_publishable_41a2jzlzwZgFrdMJ6UpDXQ_jysf69_C"
 
 _SHEET_CSV_URL = (
     "https://docs.google.com/spreadsheets/d/e/2PACX-1vRtuTLaOZzk-uRDdRchwdNmypGJ8eO2K7qdckkL7Sh0VohIa8OHWMDbKuDDHQMsoLYOhMfIMlplKoop/pub"
-    "?gid=692217056&single=true&output=csv"
+    "?gid=1463680290&single=true&output=csv"
 )
 
 _MAX_CANDIDATES_TO_SEND = 200
