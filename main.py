@@ -52,7 +52,9 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
     report = report if report is not None else {}
     report.clear()
     report.update({"mode": "unified", "sources": {}, "partial": False,
-                   "synced_count": 0, "persistence_errors": 0, "by_category": {}})
+                   "synced_count": 0, "persistence_errors": 0, "by_category": {},
+                   "discarded_missing_date": 0, "discarded_old_date": 0,
+                   "discarded_out_of_scope": 0})
     chosen = scrapers if scrapers is not None else ALL_SCRAPERS
     scraped_pool = ThreadPoolExecutor(max_workers=min(8,max(1,len(chosen))))
     sync_pool = ThreadPoolExecutor(max_workers=10)
@@ -87,18 +89,29 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
                     print(f"[RADAR] Fonte {name}: {type(e).__name__}")
                     continue
                 for vaga in jobs:
-                    if not _passes_location_filter(vaga): continue
-                    if not vaga.get("published_at") or not is_recent(vaga["published_at"],days=14): continue
-                    title=vaga.get("title") or ""
-                    url=vaga.get("url") or ""
-                    cat=vaga.get("category") or ""
-                    if not title or not url or url in seen_urls: continue
-                    if cat in ("fora_escopo","revisao_escopo","outros",""): continue
-                    if cat=="designer" and not is_product_design_title(title): continue
-                    if is_vendas_vaga(vaga) or is_blacklisted(vaga): continue
+                    if not _passes_location_filter(vaga):
+                        report["discarded_out_of_scope"] += 1
+                        continue
+                    published = vaga.get("published_at")
+                    if not published:
+                        report["discarded_missing_date"] += 1
+                        continue
+                    if not is_recent(published, days=14):
+                        report["discarded_old_date"] += 1
+                        continue
+                    title = vaga.get("title") or ""
+                    url = vaga.get("url") or ""
+                    cat = vaga.get("category") or ""
+                    if not title or not url or url in seen_urls:
+                        continue
+                    if (cat in ("fora_escopo", "revisao_escopo", "outros", "") or
+                        (cat == "designer" and not is_product_design_title(title)) or
+                        is_vendas_vaga(vaga) or is_blacklisted(vaga)):
+                        report["discarded_out_of_scope"] += 1
+                        continue
                     seen_urls.add(url)
-                    report["by_category"][cat]=report["by_category"].get(cat,0)+1
-                    save_futures.append(sync_pool.submit(_persist_job,vaga))
+                    report["by_category"][cat] = report["by_category"].get(cat, 0) + 1
+                    save_futures.append(sync_pool.submit(_persist_job, vaga))
         except FuturesTimeout:
             print("[RADAR] Tempo de coleta encerrado; preservando fontes gravadas")
         pending={f for f in scrape_futures if f not in completed}
