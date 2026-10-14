@@ -116,16 +116,18 @@ def scrape():
         print("=" * 60)
 
         from main import run
-        count = run()
-        removidas = cleanup_vagas_fechadas()
-
-        print("=" * 60)
-        print(f"✅ SCRAPE COMPLETO: {count} vagas novas adicionadas")
-        print(f"🗑️  {removidas} vagas fechadas removidas")
-        print("=" * 60)
-
-        finish(run_id, True, count=count)
-        return jsonify({"status": "ok", "vagas_sincronizadas": count, "vagas_removidas": removidas, "run_id": run_id})
+        report = {}
+        count = run(report=report)
+        # Só a confirmação real de disponibilidade pode encerrar uma vaga.
+        partial = bool(report.get("partial"))
+        finish(run_id, not partial, count=count,
+               error="Algumas fontes falharam ou excederam o prazo" if partial else None,
+               details=report)
+        return jsonify({"status": "partial" if partial else "ok",
+                        "vagas_sincronizadas": count, "vagas_removidas": 0,
+                        "fontes": report.get("sources",{}),
+                        "por_categoria": report.get("by_category",{}),
+                        "run_id": run_id}), (206 if partial else 200)
     except Exception as e:
         print(f"❌ ERRO NO SCRAPE: {e}")
         import traceback
