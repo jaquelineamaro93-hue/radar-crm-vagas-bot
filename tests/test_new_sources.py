@@ -90,11 +90,12 @@ class NewSourceTests(unittest.TestCase):
         self.assertLess(now - date, timedelta(days=3))
         self.assertEqual(VAGAS_SOURCE, "Vagas.com Você")
 
-    def test_orquestrador_unico_inclui_ambas_as_novas_fontes(self):
+    def test_orquestrador_mantem_fontes_ativas_sem_indeed_e_vagasremotas(self):
         names = {f.__module__.split(".")[-1] for f in ALL_SCRAPERS}
         self.assertIn("startupjobs", names)
-        self.assertIn("vagasremotas", names)
         self.assertIn("vagascom", names)
+        self.assertNotIn("vagasremotas", names)
+        self.assertNotIn("indeed", names)
 
 
 if __name__ == "__main__":
