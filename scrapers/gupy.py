@@ -5,6 +5,8 @@ A função scrape(searches=...) é usada pelo orquestrador com plano equilibrado
 e os termos completos continuam em SEARCHES para rotação entre execuções.
 """
 import requests
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 from config import KEYWORDS, CXCS_SEARCH_TERMS
 from .base import classify
 
@@ -25,6 +27,37 @@ SEARCHES = list(dict.fromkeys(
     BASE_SEARCHES + list(CXCS_SEARCH_TERMS) +
     [term for category in APPROVED_FAMILIES for term in KEYWORDS.get(category,[])]
 ))
+
+def _verified_open(job, now=None):
+    """Somente anuncio publicado com prazo de candidatura futuro, na busca viva.
+
+    Sem prazo comprovado, o anuncio fica sem selo de aberta e nao entra
+    na listagem de vagas abertas. HTTP 200 sozinho nao prova isso.
+    """
+    if not isinstance(job, dict):
+        return False
+    if job.get("isOpen") is False or job.get("isActive") is False:
+        return False
+    status = str(job.get("status") or job.get("jobStatus") or "").casefold()
+    if status in {"closed", "expired", "inactive", "cancelled", "encerrada", "encerrado"}:
+        return False
+    link = job.get("jobUrl") or ""
+    parsed = urlparse(link)
+    if parsed.scheme != "https" or not (
+        parsed.hostname == "gupy.io" or (parsed.hostname or "").endswith(".gupy.io")
+    ):
+        return False
+    raw = job.get("applicationDeadline")
+    if not raw:
+        return False
+    try:
+        deadline = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        if deadline.tzinfo is None:
+            deadline = deadline.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return deadline >= (now or datetime.now(timezone.utc))
+
 
 def scrape(searches=None) -> list[dict]:
     vagas=[]
@@ -59,12 +92,17 @@ def scrape(searches=None) -> list[dict]:
                     city=job.get("city") or ""
                     state=job.get("state") or ""
                     location=", ".join(str(x) for x in (city,state) if x) or "Brasil"
+                    # Sem prova de prazo aberto nao anunciar como ativa.
+                    if not _verified_open(job):
+                        continue
                     vagas.append({
                         "title":title,"company":job.get("careerPageName") or "Não informado",
                         "url":url,"location":location,
                         "description":str(job.get("description") or "")[:300],
                         "source":SOURCE,"category":category,
                         "published_at":job.get("publishedDate") or job.get("publishedAt") or job.get("createdAt"),
+                        "availability_evidence":"gupy_open_deadline",
+                        "availability_checked_at":datetime.now(timezone.utc).isoformat(),
                     })
             except (requests.RequestException, ValueError,TypeError) as error:
                 print(f"[Gupy] Falha em {query!r}: {type(error).__name__}")

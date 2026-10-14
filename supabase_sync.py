@@ -130,6 +130,14 @@ def sync_vaga_crm(vaga: dict):
         # O banco define 'unverified' para novos registros e preserva o status existente no upsert.
     }
 
+    # Selo de vaga aberta somente quando a fonte trouxe prova concreta.
+    # Fontes sem indicacao explicita permanecem unverified (fora do Radar).
+    if (vaga.get("source") == "Gupy" and
+        vaga.get("availability_evidence") == "gupy_open_deadline" and
+        vaga.get("availability_checked_at")):
+        payload["availability_status"] = "listed"
+        payload["availability_checked_at"] = vaga["availability_checked_at"]
+
     try:
         resp = requests.post(
             f"{SUPABASE_URL}/rest/v1/vagas_crm",
