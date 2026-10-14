@@ -1,66 +1,68 @@
-"""
-Scraper para Gupy — focado em CRM e áreas correlatas.
-API: employability-portal.gupy.io/api/v1/jobs
+"""Coleta Gupy unificada para CRM, CX, CS, Marketing, IA, Dados, Product e demais famílias aprovadas.
+
+A origem aceita diferentes modalidades; nunca restringir somente a remoto.
+A função scrape(searches=...) é usada pelo orquestrador com plano equilibrado
+e os termos completos continuam em SEARCHES para rotação entre execuções.
 """
 import requests
+from config import KEYWORDS, CXCS_SEARCH_TERMS
 from .base import classify
 
 SOURCE = "Gupy"
 API_URL = "https://employability-portal.gupy.io/api/v1/jobs"
+APPROVED_FAMILIES = (
+    "crm", "cxcs", "marketing", "designer", "revops", "salesops",
+    "ia", "data", "po_pm", "qa", "tech", "automacao",
+    "automacao_presencial", "automacao_remote"
+)
+BASE_SEARCHES = [
+    "crm", "analista de crm", "customer success", "customer experience",
+    "marketing", "salesforce", "hubspot", "growth", "revops", "e-commerce",
+    "product designer", "designer de produto", "analista de dados",
+    "inteligencia artificial", "quality assurance", "automacao",
+]
+SEARCHES = list(dict.fromkeys(
+    BASE_SEARCHES + list(CXCS_SEARCH_TERMS) +
+    [term for category in APPROVED_FAMILIES for term in KEYWORDS.get(category,[])]
+))
 
-
-def scrape() -> list[dict]:
-    vagas = []
-    seen_urls: set[str] = set()
-
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "application/json",
-    })
-
-    from config import KEYWORDS, CXCS_SEARCH_TERMS
-    # CX/CS vem primeiro para não ficar no fim de centenas de buscas de CRM
-    # e acabar cortado pelo timeout global do job.
-    searches = list(dict.fromkeys(CXCS_SEARCH_TERMS + KEYWORDS.get("crm", [])))
-
-    for query in searches:
-        try:
-            params = {"jobName": query, "limit": 20, "offset": 0, "isRemoteWork": "true"}
-            resp = session.get(API_URL, params=params, timeout=(5, 10))
-            if resp.status_code != 200:
-                continue
-
-            for job in resp.json().get("data", []):
-                url = job.get("jobUrl", "") or f"https://portal.gupy.io/job/{job.get('id','')}"
-                if url in seen_urls:
+def scrape(searches=None) -> list[dict]:
+    vagas=[]
+    seen=set()
+    planned = list(searches) if searches is not None else SEARCHES
+    with requests.Session() as session:
+        session.headers.update({
+            "User-Agent":"Mozilla/5.0 (compatible; ConexaoCRMJobs/1.0)",
+            "Accept":"application/json",
+        })
+        for query in planned:
+            try:
+                # Não limitar a remoto: o portal também precisa de vagas híbridas/presenciais.
+                resp=session.get(API_URL,params={"jobName":query,"limit":20,"offset":0},timeout=(3,8))
+                if resp.status_code != 200:
+                    print(f"[Gupy] HTTP {resp.status_code} para {query!r}")
                     continue
-                seen_urls.add(url)
-
-                title = job.get("name", "")
-                if not title:
-                    continue
-
-                category = classify(title)
-                if not category:
-                    continue
-
-                city = job.get("city", "")
-                state = job.get("state", "")
-                loc = f"{city}, {state}".strip(", ") if (city or state) else "Remoto"
-
-                vagas.append({
-                    "title": title,
-                    "company": job.get("careerPageName", "Não informado"),
-                    "url": url,
-                    "location": loc,
-                    "description": job.get("description", "")[:300],
-                    "source": SOURCE,
-                    "category": category,
-                    "published_at": None,
-                })
-        except Exception as e:
-            print(f"[Gupy] Erro em '{query}': {e}")
-
-    print(f"[Gupy] {len(vagas)} vagas encontradas")
+                parsed=resp.json()
+                jobs=parsed.get("data",[]) if isinstance(parsed,dict) else []
+                for job in jobs:
+                    if not isinstance(job,dict):continue
+                    title=job.get("name") or job.get("title") or ""
+                    url=job.get("jobUrl") or f"https://portal.gupy.io/job/{job.get('id','')}"
+                    if not title or not url or url in seen:continue
+                    category=classify(title)
+                    if not category:continue
+                    seen.add(url)
+                    city=job.get("city") or ""
+                    state=job.get("state") or ""
+                    location=", ".join(str(x) for x in (city,state) if x) or "Brasil"
+                    vagas.append({
+                        "title":title,"company":job.get("careerPageName") or "Não informado",
+                        "url":url,"location":location,
+                        "description":str(job.get("description") or "")[:300],
+                        "source":SOURCE,"category":category,
+                        "published_at":job.get("publishedAt") or job.get("createdAt"),
+                    })
+            except (requests.RequestException, ValueError,TypeError) as error:
+                print(f"[Gupy] Falha em {query!r}: {type(error).__name__}")
+    print(f"[Gupy] {len(vagas)} vagas válidas em {len(planned)} consultas")
     return vagas
