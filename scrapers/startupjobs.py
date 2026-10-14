@@ -15,9 +15,9 @@ from .base import classify, is_recent
 
 SOURCE = "Startup.jobs"
 SEARCHES = [
-    "https://startup.jobs/feeds/jobs",
     "https://startup.jobs/feeds/jobs?workplace=remote",
-    "https://startup.jobs/feeds/jobs?role=marketing",
+    "https://startup.jobs/feeds/jobs?role=marketing&workplace=remote",
+    "https://startup.jobs/feeds/jobs?role=engineering&workplace=remote",
 ]
 _HEADERS = {
     "User-Agent": "ConexaoCRMJobs/1.0 (public RSS; contact via conexaocrm.com)",
@@ -104,7 +104,7 @@ def scrape(searches=None):
                     clean_summary = BeautifulSoup(summary, "html.parser").get_text(" ", strip=True)
                     vagas.append({
                         "title": title, "company": "Não informado",
-                        "url": link, "location": "Não informado",
+                        "url": link, "location": "Remoto",
                         "description": clean_summary[:500],
                         "source": SOURCE, "category": category,
                         "published_at": date,
