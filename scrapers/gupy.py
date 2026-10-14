@@ -29,11 +29,7 @@ SEARCHES = list(dict.fromkeys(
 ))
 
 def _verified_open(job, now=None):
-    """Somente anuncio publicado com prazo de candidatura futuro, na busca viva.
-
-    Sem prazo comprovado, o anuncio fica sem selo de aberta e nao entra
-    na listagem de vagas abertas. HTTP 200 sozinho nao prova isso.
-    """
+    """Prazo de candidatura comprovadamente aberto; nao excluir unverified."""
     if not isinstance(job, dict):
         return False
     if job.get("isOpen") is False or job.get("isActive") is False:
@@ -57,6 +53,25 @@ def _verified_open(job, now=None):
     except (TypeError, ValueError, OverflowError):
         return False
     return deadline >= (now or datetime.now(timezone.utc))
+
+
+def _explicitly_closed(job, now=None):
+    """Fonte declarou encerramento ou prazo expirado; nao inclui na coleta."""
+    if job.get("isOpen") is False or job.get("isActive") is False:
+        return True
+    status = str(job.get("status") or job.get("jobStatus") or "").strip().casefold()
+    if status in {"closed", "expired", "inactive", "cancelled", "encerrada", "encerrado"}:
+        return True
+    deadline = job.get("applicationDeadline")
+    if deadline:
+        try:
+            dt = datetime.fromisoformat(str(deadline).replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt < (now or datetime.now(timezone.utc))
+        except (TypeError, ValueError, OverflowError):
+            pass
+    return False
 
 
 def scrape(searches=None) -> list[dict]:
@@ -92,18 +107,21 @@ def scrape(searches=None) -> list[dict]:
                     city=job.get("city") or ""
                     state=job.get("state") or ""
                     location=", ".join(str(x) for x in (city,state) if x) or "Brasil"
-                    # Sem prova de prazo aberto nao anunciar como ativa.
-                    if not _verified_open(job):
+                    # Excluir somente quando houver evidencia explicita de encerramento.
+                    # Prazo ausente = unverified, nao vaga encerrada.
+                    if _explicitly_closed(job):
                         continue
-                    vagas.append({
+                    vaga = {
                         "title":title,"company":job.get("careerPageName") or "Não informado",
                         "url":url,"location":location,
                         "description":str(job.get("description") or "")[:300],
                         "source":SOURCE,"category":category,
                         "published_at":job.get("publishedDate") or job.get("publishedAt") or job.get("createdAt"),
-                        "availability_evidence":"gupy_open_deadline",
-                        "availability_checked_at":datetime.now(timezone.utc).isoformat(),
-                    })
+                    }
+                    if _verified_open(job):
+                        vaga["availability_evidence"] = "gupy_open_deadline"
+                        vaga["availability_checked_at"] = datetime.now(timezone.utc).isoformat()
+                    vagas.append(vaga)
             except (requests.RequestException, ValueError,TypeError) as error:
                 print(f"[Gupy] Falha em {query!r}: {type(error).__name__}")
     if planned and http_ok == 0 and http_errors:

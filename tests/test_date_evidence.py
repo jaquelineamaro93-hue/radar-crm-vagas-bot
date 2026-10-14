@@ -1,7 +1,7 @@
 import unittest
 from bs4 import BeautifulSoup
 from scrapers.base import extract_publication_date
-from scrapers.gupy import API_URL as GUPY_API_URL, _verified_open
+from scrapers.gupy import API_URL as GUPY_API_URL, _verified_open, _explicitly_closed
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 from supabase_sync import sync_vaga_crm
@@ -53,6 +53,31 @@ class ActiveJobsTests(unittest.TestCase):
         ):
             with self.subTest(override=override):
                 self.assertFalse(_verified_open({**self.vaga, **override}, self.now))
+
+    def test_sem_prazo_e_unverified_nao_e_encerrada(self):
+        vaga = {**self.vaga, "applicationDeadline": None}
+        self.assertFalse(_verified_open(vaga, self.now))
+        self.assertFalse(_explicitly_closed(vaga, self.now))
+
+    def test_somente_encerradas_sao_excluidas(self):
+        for patch_data in (
+            {"applicationDeadline": "2026-10-12T00:00:00Z"},
+            {"jobStatus": "closed"},
+            {"isOpen": False},
+            {"isActive": False},
+        ):
+            with self.subTest(patch_data=patch_data):
+                self.assertTrue(_explicitly_closed({**self.vaga, **patch_data}, self.now))
+        self.assertFalse(_explicitly_closed(self.vaga, self.now))
+
+    def test_fontes_desativadas_nao_entram_na_coleta(self):
+        from scrapers import ALL_SCRAPERS
+        enabled = {fn.__module__.split(".")[-1] for fn in ALL_SCRAPERS}
+        self.assertNotIn("indeed", enabled)
+        self.assertNotIn("vagasremotas", enabled)
+        for source in ("gupy", "linkedin", "catho", "infojobs",
+                       "vagascom", "startupjobs"):
+            self.assertIn(source, enabled)
 
     def test_supabase_so_confirma_aberta_com_evidencia_gupy(self):
         base = {
