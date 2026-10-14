@@ -89,31 +89,16 @@ def debug():
 
 
 @app.route("/api/scrape-product-design", methods=["GET"])
-def scrape_product_design():
+def deprecated_product_design_endpoint():
+    """Endpoint legado desativado. Coleta e validação usam apenas /api/scrape."""
     secret = os.environ.get("CRON_SECRET", "")
     if not secret or request.headers.get("Authorization", "") != f"Bearer {secret}":
         return jsonify({"error": "Unauthorized"}), 401
-    from cron_history import begin, finish
-    run_id = begin("radar_crm_product_design")
-    try:
-        from main import run
-        from scrapers.product_design import scrape as design_scrape
-        count = run(scrapers=[design_scrape])
-        # Existing 10:00 UTC cron also verifies a bounded batch of old links.
-        # Failures here must never roll back or block new job ingestion.
-        try:
-            from job_availability import check_closed_jobs
-            availability = check_closed_jobs()
-        except Exception:
-            app.logger.exception("Falha na verificacao nao destrutiva de vagas")
-            availability = {"checked": 0, "error": "verification_unavailable"}
-        finish(run_id, True, count=count, details={"availability": availability})
-        return jsonify({"status": "ok", "vagas_sincronizadas": count,
-                        "verificacao_disponibilidade": availability, "run_id": run_id})
-    except Exception:
-        app.logger.exception("Falha na coleta de Product Design")
-        finish(run_id, False, error="Falha na coleta de Product Design")
-        return jsonify({"error": "Falha interna", "run_id": run_id}), 500
+    return jsonify({
+        "status": "deprecated",
+        "message": "Coleta unificada. Use /api/scrape para todas as categorias.",
+        "canonical_endpoint": "/api/scrape"
+    }), 410
 
 
 @app.route("/api/scrape", methods=["GET"])
