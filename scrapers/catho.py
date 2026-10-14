@@ -201,7 +201,7 @@ SEARCHES = list(dict.fromkeys(SEARCHES + [
     term.casefold().replace(" ", "-") for term in CXCS_SEARCH_TERMS
 ]))
 
-def scrape() -> list[dict]:
+def scrape(searches=None) -> list[dict]:
     vagas = []
     seen = set()
     session = requests.Session()
@@ -209,7 +209,7 @@ def scrape() -> list[dict]:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36",
         "Accept-Language": "pt-BR,pt;q=0.9",
     })
-    for q in SEARCHES:
+    for q in (searches if searches is not None else SEARCHES):
         try:
             url = f"{BASE_URL}/vagas/home-office/?q={q}"
             resp = session.get(url, timeout=(5, 12))
