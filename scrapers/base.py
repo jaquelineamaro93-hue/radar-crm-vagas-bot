@@ -89,18 +89,22 @@ def classify(title: str, description: str = "") -> str | None:
     return None
 
 
-def is_recent(published_at: str | None, days: int = 30) -> bool:
-    """True se a vaga foi publicada nos últimos `days` dias, ou se a data é desconhecida."""
+def is_recent(published_at: str | None, days: int = 14) -> bool:
+    """True somente quando a data de publicação é comprovada na janela.
+
+    Vaga sem data, data inválida ou data futura nunca vira 'recente' por hipótese.
+    O histórico permanece no banco para referências e Vagas Salvas.
+    """
     if not published_at:
-        return True
+        return False
     try:
-        dt = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+        dt = datetime.fromisoformat(str(published_at).replace("Z","+00:00"))
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-        return dt >= cutoff
-    except Exception:
-        return True
+            dt=dt.replace(tzinfo=timezone.utc)
+        now=datetime.now(timezone.utc)
+        return now-timedelta(days=days)<=dt<=now+timedelta(hours=2)
+    except (ValueError,TypeError,OverflowError):
+        return False
 
 
 def format_date(published_at: str | None) -> str:
