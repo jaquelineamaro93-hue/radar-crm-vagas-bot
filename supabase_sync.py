@@ -77,8 +77,8 @@ def sync_vaga_crm(vaga: dict):
         "category": vaga.get("category"),
         "url_hash": _url_hash(vaga["url"]),
         "last_seen_at": datetime.now(timezone.utc).isoformat(),
-        "availability_status": "listed",
-        "closure_failures": 0,
+        # O cadastro da vaga não comprova disponibilidade.
+        # O banco define 'unverified' para novos registros e preserva o status existente no upsert.
     }
 
     try:
