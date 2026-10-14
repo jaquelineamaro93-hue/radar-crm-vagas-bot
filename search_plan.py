@@ -110,5 +110,5 @@ def select_searches(terms, source="", limit=None, day_index=None):
         return []
     size = min(len(ordered), max(1, min(40, int(limit or DEFAULT_BATCH_SIZE))))
     ordinal = day_index if day_index is not None else datetime.now(timezone.utc).date().toordinal()
-    start = (ordinal * size) % len(ordered)
+    start = (ordinal * size + sum(ord(char) for char in source)) % len(ordered)
     return [ordered[(start + i) % len(ordered)] for i in range(size)]
