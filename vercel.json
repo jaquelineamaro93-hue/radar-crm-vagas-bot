@@ -3,6 +3,10 @@
     {
       "path": "/api/scrape",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/sync-open-to-work",
+      "schedule": "0 10 * * *"
     }
   ]
 }
