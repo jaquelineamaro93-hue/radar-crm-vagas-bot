@@ -4,7 +4,7 @@ Usa o atributo title= do link para pegar o título correto.
 """
 import requests
 from bs4 import BeautifulSoup
-from .base import classify
+from .base import classify, extract_publication_date
 from config import CXCS_SEARCH_TERMS
 
 SOURCE = "Vagas.com"
@@ -259,7 +259,7 @@ def scrape(searches=None) -> list[dict]:
                     "description": "",
                     "source": SOURCE,
                     "category": category,
-                    "published_at": None,
+                    "published_at": extract_publication_date(link.find_parent(["article", "li", "div"]) or link),
                 })
         except Exception as e:
             print(f"[Vagas.com] Erro '{slug}': {e}")

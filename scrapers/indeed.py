@@ -130,6 +130,8 @@ def _result_to_vaga(r: dict) -> dict | None:
 def scrape(searches=None) -> list[dict]:
     vagas: list[dict] = []
     seen_jks: set[str] = set()
+    http_ok = 0
+    http_errors = {}
 
     session = requests.Session()
     session.headers.update({
@@ -151,7 +153,9 @@ def scrape(searches=None) -> list[dict]:
                 timeout=(5, 12),
             )
             if resp.status_code != 200:
+                http_errors[resp.status_code] = http_errors.get(resp.status_code, 0) + 1
                 continue
+            http_ok += 1
 
             # Resposta curta = CAPTCHA / bloqueio do Indeed
             if len(resp.text) < _MIN_HTML_SIZE:
@@ -171,5 +175,7 @@ def scrape(searches=None) -> list[dict]:
         except Exception as e:
             print(f"[Indeed] '{query}': {e}")
 
-    print(f"[Indeed] {len(vagas)} vagas encontradas")
+    if (searches if searches is not None else SEARCHES) and http_ok == 0 and http_errors:
+        raise RuntimeError(f"Indeed indisponivel: HTTP {http_errors}")
+    print(f"[Indeed] {len(vagas)} vagas encontradas; HTTP200={http_ok}; erros={http_errors}")
     return vagas

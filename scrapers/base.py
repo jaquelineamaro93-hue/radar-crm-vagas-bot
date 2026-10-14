@@ -181,3 +181,45 @@ def extract_seniority(title: str) -> str:
     if any(w in t for w in ["senior", "sênior", "sénior", "sr", "sr.", "lead", "principal", "staff"]):
         return "Sênior"
     return ""
+
+
+def extract_publication_date(card):
+    """Extrai data real da publicacao, sem substituir pela data de coleta."""
+    if card is None:
+        return None
+    candidates = [card]
+    try:
+        candidates.extend(card.select(
+            "time, [datetime], [data-published-at], [data-publication-date], "
+            "[data-date-posted], [data-date]"
+        ))
+    except (AttributeError, TypeError):
+        return None
+    for node in candidates:
+        for attr in ("datetime", "data-published-at", "data-publication-date",
+                     "data-date-posted", "data-date"):
+            raw = (node.get(attr) or "").strip()
+            if not raw:
+                continue
+            try:
+                dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+                return dt.replace(tzinfo=timezone.utc).isoformat() if dt.tzinfo is None else dt.isoformat()
+            except (ValueError, TypeError):
+                pass
+        try:
+            # Nao tratar palavras no titulo/descricao como data de publicacao.
+            node_class = " ".join(node.get("class") or []).lower()
+            node_id = str(node.get("id") or "").lower()
+            if node.name != "time" and not re.search(
+                r"(date|data|published|posted|publica|postado)", node_class + " " + node_id
+            ):
+                continue
+            label = node.get_text(" ", strip=True).lower()
+            if re.search(r"\b(?:há\s*\d+\s*(?:dias?|horas?|semanas?)|"
+                         r"\d+\s*(?:days?|hours?|weeks?)\s*ago|hoje|ontem)\b", label):
+                parsed = relative_to_iso(label)
+                if parsed:
+                    return parsed
+        except (AttributeError, TypeError):
+            pass
+    return None

@@ -67,7 +67,7 @@ def _taxonomia(vaga):
             "automacao_presencial":"marketing-automation",
             "automacao_remote":"marketing-automation"}.get(category,category)
     if category=="cxcs":
-        family="customer-success" if re.search(r"(customer success|sucesso do cliente|\\bcs\\b)",title) else "customer-experience"
+        family="customer-success" if re.search(r"(customer success|sucesso do cliente|\bcs\b)",title) else "customer-experience"
     tags=[category,family]
     for term,label in (("salesforce","salesforce"),("hubspot","hubspot"),
                        ("marketing cloud","marketing-cloud"),("revops","revops"),
@@ -78,7 +78,7 @@ def _taxonomia(vaga):
 
 def _metadata(vaga):
     title=(vaga.get("title") or "")
-    description=re.sub(r"\\s+"," ",str(vaga.get("description") or "")).strip()
+    description=re.sub(r"\s+"," ",str(vaga.get("description") or "")).strip()
     loc=(vaga.get("location") or "").lower()
     text=" ".join(str(vaga.get(k) or "") for k in ("modality","modality_label","job_type","work_model"))
     combined=(loc+" "+text).lower()
@@ -88,14 +88,14 @@ def _metadata(vaga):
     else:modality=None
     t=title.lower()
     if re.search(r"(estági|estagi|internship|trainee)",t):seniority="Estágio"
-    elif re.search(r"(júnior|junior|\\bjr\\b)",t):seniority="Júnior"
-    elif re.search(r"(\\bpleno\\b|mid.level)",t):seniority="Pleno"
-    elif re.search(r"(sênior|senior|\\bsr\\b)",t):seniority="Sênior"
+    elif re.search(r"(júnior|junior|\bjr\b)",t):seniority="Júnior"
+    elif re.search(r"(\bpleno\b|mid.level)",t):seniority="Pleno"
+    elif re.search(r"(sênior|senior|\bsr\b)",t):seniority="Sênior"
     elif re.search(r"(gerente|manager|coordenad|head|lead|diretor)",t):seniority="Liderança"
     else:seniority=None
     contract_text=" ".join(str(vaga.get(k) or "") for k in ("contract","contract_type","job_type","description")).lower()
-    contract="CLT" if re.search(r"\\bclt\\b",contract_text) else "PJ" if re.search(r"\\bpj\\b",contract_text) else None
-    return modality,seniority,description[:250] if description else None,contract
+    contract="CLT" if re.search(r"\bclt\b",contract_text) else "PJ" if re.search(r"\bpj\b",contract_text) else None
+    return modality,seniority,description[:500] if description else None,contract
 
 
 def sync_vaga_crm(vaga: dict):

@@ -45,14 +45,16 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
     import inspect
     import os
     from collections import defaultdict, deque
-    from search_plan import select_searches
+    from search_plan import select_search_batch
 
     print("[RADAR] Coleta única iniciada")
     init_db()
     report = report if report is not None else {}
     report.clear()
     report.update({"mode": "unified", "sources": {}, "partial": False,
-                   "synced_count": 0, "persistence_errors": 0, "by_category": {}})
+                   "synced_count": 0, "persistence_errors": 0, "by_category": {},
+                   "discarded_missing_date": 0, "discarded_old_date": 0,
+                   "discarded_out_of_scope": 0})
     chosen = scrapers if scrapers is not None else ALL_SCRAPERS
     scraped_pool = ThreadPoolExecutor(max_workers=min(8,max(1,len(chosen))))
     sync_pool = ThreadPoolExecutor(max_workers=10)
@@ -64,9 +66,10 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
             name=fn.__module__.rsplit(".",1)[-1]
             all_terms=fn.__globals__.get("SEARCHES")
             supports_batch="searches" in inspect.signature(fn).parameters
-            selected=select_searches(all_terms, source=name,limit=5) if supports_batch and all_terms is not None else None
+            selected, progress = select_search_batch(all_terms, source=name) if supports_batch and all_terms is not None else (None, {})
             report["sources"][name]={"configured_queries":len(all_terms or ()),
-                "queries_attempted":len(selected) if selected is not None else None}
+                "queries_attempted":len(selected) if selected is not None else len(all_terms or ()),
+                "cursor": progress}
             scrape_futures[scraped_pool.submit(_safe_scrape,fn,selected)] = name
         # Close by a bounded deadline; no 25s global timeout for hundreds of queries.
         collect_seconds=min(125,max(35,int(os.getenv("RADAR_COLLECT_TIMEOUT","75"))))
@@ -86,18 +89,29 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
                     print(f"[RADAR] Fonte {name}: {type(e).__name__}")
                     continue
                 for vaga in jobs:
-                    if not _passes_location_filter(vaga): continue
-                    if not vaga.get("published_at") or not is_recent(vaga["published_at"],days=14): continue
-                    title=vaga.get("title") or ""
-                    url=vaga.get("url") or ""
-                    cat=vaga.get("category") or ""
-                    if not title or not url or url in seen_urls: continue
-                    if cat in ("fora_escopo","revisao_escopo","outros",""): continue
-                    if cat=="designer" and not is_product_design_title(title): continue
-                    if is_vendas_vaga(vaga) or is_blacklisted(vaga): continue
+                    if not _passes_location_filter(vaga):
+                        report["discarded_out_of_scope"] += 1
+                        continue
+                    published = vaga.get("published_at")
+                    if not published:
+                        report["discarded_missing_date"] += 1
+                        continue
+                    if not is_recent(published, days=14):
+                        report["discarded_old_date"] += 1
+                        continue
+                    title = vaga.get("title") or ""
+                    url = vaga.get("url") or ""
+                    cat = vaga.get("category") or ""
+                    if not title or not url or url in seen_urls:
+                        continue
+                    if (cat in ("fora_escopo", "revisao_escopo", "outros", "") or
+                        (cat == "designer" and not is_product_design_title(title)) or
+                        is_vendas_vaga(vaga) or is_blacklisted(vaga)):
+                        report["discarded_out_of_scope"] += 1
+                        continue
                     seen_urls.add(url)
-                    report["by_category"][cat]=report["by_category"].get(cat,0)+1
-                    save_futures.append(sync_pool.submit(_persist_job,vaga))
+                    report["by_category"][cat] = report["by_category"].get(cat, 0) + 1
+                    save_futures.append(sync_pool.submit(_persist_job, vaga))
         except FuturesTimeout:
             print("[RADAR] Tempo de coleta encerrado; preservando fontes gravadas")
         pending={f for f in scrape_futures if f not in completed}
@@ -106,7 +120,7 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
             report["sources"][name]["state"]="timeout"
             future.cancel()
         report["partial"]=bool(pending) or any(
-            x.get("state")!="ok" for x in report["sources"].values())
+            x.get("state") in ("error", "timeout") for x in report["sources"].values())
         for future in save_futures:
             try:
                 report["synced_count"]+=int(future.result())
@@ -115,10 +129,11 @@ def run(scrapers: list | None = None, report: dict | None = None) -> int:
                 print(f"[RADAR] Persistência: {type(e).__name__}")
         if report["persistence_errors"]:
             raise RuntimeError(f"{report['persistence_errors']} falhas de gravação")
-        if not save_futures:
-            raise RuntimeError("Nenhuma vaga datada nos últimos 14 dias nas fontes concluídas")
-        if not report["synced_count"]:
+        # Zero vagas novas e uma situacao valida. Diferencie-a de falha de fonte.
+        # Sem tentar gravar registros nao ha sincronizacao a confirmar.
+        if save_futures and not report["synced_count"]:
             raise RuntimeError("Supabase não confirmou sincronização")
+        report["candidates_with_valid_date"] = len(save_futures)
         print(f"[RADAR] {report['synced_count']} sincronizadas; parcial={report['partial']}; categorias={report['by_category']}")
         return report["synced_count"]
     finally:

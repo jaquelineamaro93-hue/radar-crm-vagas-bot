@@ -34,28 +34,81 @@ def _label(term):
     chars = ''.join(c for c in chars if not unicodedata.combining(c))
     return re.sub(r"[_+\-]+"," ",chars)
 
-def select_searches(terms, source='', limit=None, day_index=None):
-    """Não prioriza fonte ou uma única categoria; mantém cobertura rotativa."""
-    terms=list(dict.fromkeys(terms or ()))
-    if not terms:return []
-    limit=max(1,min(40,int(limit or os.getenv('RADAR_QUERIES_PER_SOURCE',DEFAULT_BATCH_SIZE))))
-    if len(terms)<=limit:return terms
-    labels=[_label(t) for t in terms]
-    selected=[]
-    used=set()
-    # Gira o ponto de partida por fonte e dia; nenhuma área domina todos os ciclos.
-    if day_index is None:
-        day_index=datetime.now(timezone.utc).date().toordinal()
-    start_family=(day_index+sum(ord(c) for c in source))%len(FAMILIES)
-    ordered=FAMILIES[start_family:]+FAMILIES[:start_family]
-    for _,patterns in ordered:
-        candidates=[i for i,t in enumerate(labels) if i not in used and any(re.search(p,t) for p in patterns)]
-        if not candidates:continue
-        choice=min(candidates,key=lambda i:(len(labels[i]),i))
-        used.add(choice);selected.append(choice)
-        if len(selected)>=limit:return [terms[i] for i in selected]
-    remaining=[i for i in range(len(terms)) if i not in used]
-    window=limit-len(selected)
-    start=(day_index*max(1,window))%len(remaining)
-    selected.extend(remaining[(start+j)%len(remaining)] for j in range(window))
-    return [terms[i] for i in selected]
+def _balanced_terms(terms):
+    """Intercala familias para nao gastar um ciclo inteiro em uma unica area."""
+    groups = [[] for _ in FAMILIES]
+    unmatched = []
+    for term in dict.fromkeys(terms or ()):
+        label = _label(term)
+        family = next((i for i, (_, patterns) in enumerate(FAMILIES)
+                       if any(re.search(pattern, label) for pattern in patterns)), None)
+        (groups[family] if family is not None else unmatched).append(term)
+    groups.append(unmatched)
+    # Round-robin deterministico: todos os titulos permanecem na rotacao.
+    result = []
+    index = 0
+    while any(index < len(group) for group in groups):
+        for group in groups:
+            if index < len(group):
+                result.append(group[index])
+        index += 1
+    return result
+
+
+def _claim_offset(source, total, limit):
+    """Reserva atomica de um trecho do catalogo via Supabase.
+    Sem credenciais (teste local), recai para rotacao diaria deterministica.
+    """
+    if total <= 0:
+        return 0, False
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    if url and key:
+        try:
+            import requests
+            response = requests.post(
+                url + "/rest/v1/rpc/claim_vagas_search_batch",
+                headers={"apikey": key, "Authorization": "Bearer " + key,
+                         "Content-Type": "application/json"},
+                json={"p_source": source, "p_total": total, "p_batch": limit},
+                timeout=6,
+            )
+            response.raise_for_status()
+            rows = response.json()
+            if isinstance(rows, list) and rows:
+                return int(rows[0]["start_offset"]) % total, True
+            raise ValueError("Reserva nao retornou cursor")
+        except (ValueError, KeyError, TypeError, requests.RequestException) as exc:
+            print("[RADAR] Cursor indisponivel (%s): %s" %
+                  (source, type(exc).__name__))
+    today = datetime.now(timezone.utc).date().toordinal()
+    return (today * limit) % total, False
+
+
+def select_search_batch(terms, source="", limit=None):
+    """Um lote por fonte, com cobertura sem privilegio de CRM sobre outras familias.
+
+    O cursor persiste entre invocacoes e percorre toda a lista sem saltar titulos.
+    """
+    ordered = _balanced_terms(terms)
+    total = len(ordered)
+    if not total:
+        return [], {"offset": 0, "total": 0, "persisted": False}
+    requested = int(limit or os.getenv("RADAR_QUERIES_PER_SOURCE", "20"))
+    size = min(total, max(1, min(40, requested)))
+    offset, persisted = _claim_offset(source, total, size)
+    selected = [ordered[(offset + i) % total] for i in range(size)]
+    return selected, {"offset": offset, "total": total,
+                      "next_offset": (offset + size) % total,
+                      "persisted": persisted}
+
+
+def select_searches(terms, source="", limit=None, day_index=None):
+    """Compatibilidade com testes e chamadas legadas."""
+    ordered = _balanced_terms(terms)
+    if not ordered:
+        return []
+    size = min(len(ordered), max(1, min(40, int(limit or DEFAULT_BATCH_SIZE))))
+    ordinal = day_index if day_index is not None else datetime.now(timezone.utc).date().toordinal()
+    start = (ordinal * size + sum(ord(char) for char in source)) % len(ordered)
+    return [ordered[(start + i) % len(ordered)] for i in range(size)]

@@ -3,7 +3,7 @@ Scraper para Catho.com.br — focado em CRM.
 """
 import requests
 from bs4 import BeautifulSoup
-from .base import classify
+from .base import classify, extract_publication_date
 from config import CXCS_SEARCH_TERMS
 
 SOURCE = "Catho"
@@ -243,7 +243,7 @@ def scrape(searches=None) -> list[dict]:
                     "description": "",
                     "source": SOURCE,
                     "category": category,
-                    "published_at": None,
+                    "published_at": extract_publication_date(card),
                 })
         except Exception as e:
             print(f"[Catho] Erro '{q}': {e}")
